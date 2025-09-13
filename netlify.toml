@@ -1,0 +1,12 @@
+# Netlify configuration
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = []
+
+# (Optional) Force Functions v2-style Request/Response handlers
+[functions."*"]
+  runtime = "nodejs18.x"
