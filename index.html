@@ -31,6 +31,11 @@
     .tag{display:inline-block;background:#f3f3f3;border-radius:6px;padding:2px 8px;margin-left:6px;font-size:12px}
     .posrow{display:flex; gap:8px; align-items:center; margin:6px 0;}
     .posrow label{width:60px; color:#555;}
+    table{width:100%; border-collapse:collapse; margin:10px 0; font-size:14px}
+    th,td{border:1px solid #e9e9e9; padding:8px 10px; text-align:left}
+    th{background:#fafafa}
+    .actions a{cursor:pointer; color:var(--purple); text-decoration:underline; margin-right:12px}
+    .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#eef; border:1px solid #dde}
   </style>
 </head>
 <body>
@@ -62,6 +67,33 @@
           <div><span id="k3">0</span><br/>Créneaux réservés</div>
           <div><span id="k4">0</span><br/>Créneaux dispo</div>
         </div>
+
+        <div class="actions" style="margin-top:12px;">
+          <a id="showTshirts">👕 Voir détails T‑Shirts</a>
+          <a id="showSlots">🗓️ Voir détails créneaux réservés</a>
+          <a onclick="window.print()">🖨️ Imprimer</a>
+        </div>
+
+        <!-- Détails T-Shirts -->
+        <div id="tshirtsDetails" class="hidden">
+          <h4>👕 Détails T‑Shirts par personne</h4>
+          <table id="tblTshirts">
+            <thead><tr><th>Nom</th><th>Taille</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <h5>Répartition par tailles</h5>
+          <div id="sizesBreak"></div>
+        </div>
+
+        <!-- Détails Créneaux -->
+        <div id="slotsDetails" class="hidden">
+          <h4>🗓️ Détails créneaux réservés</h4>
+          <table id="tblSlots">
+            <thead><tr><th>Créneau</th><th>Personne 1</th><th>Personne 2</th><th>État</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
         <h4 style="margin-top:18px;">🔒 Créneaux déjà pris</h4>
         <div id="listTaken" class="list"></div>
         <h4 style="margin-top:18px;">✅ Créneaux disponibles</h4>
@@ -134,9 +166,8 @@
         const takenArr = (state.scheduleData[id]||[]);
         const spotsLeft = Math.max(0, 2 - takenArr.length);
         const takenTxt = takenArr.join(', ') || '—';
-        div.innerHTML = `<strong>${id}</strong><span class="tag">${spotsLeft} place(s) restante(s)</span><div class="muted">Occupé: ${takenTxt}</div>`;
+        div.innerHTML = `<strong>${id}</strong><span class="pill">${spotsLeft} place(s) restante(s)</span><div class="muted">Occupé: ${takenTxt}</div>`;
 
-        // Deux positions fixes (0 et 1)
         for(let pos=0; pos<2; pos++){
           const row = document.createElement('div'); row.className='posrow';
           const label = document.createElement('label'); label.textContent = `Pers. ${pos+1}`;
@@ -153,7 +184,7 @@
 
           const btn = document.createElement('button'); btn.textContent = already ? 'Complet' : 'Réserver';
           btn.className='action';
-          btn.disabled = already ? true : true; // activé quand on choisit un nom
+          btn.disabled = already ? true : true;
           sel.addEventListener('change', ()=>{ btn.disabled = !sel.value; });
           btn.onclick = async ()=>{
             if (!sel.value) return;
@@ -194,6 +225,43 @@
         const a = document.createElement('a'); a.href = `#slot-${cssId(id)}`; a.textContent = id;
         a.onclick = ()=>{ switchTab('planning'); setTimeout(()=>{ document.getElementById(`slot-${cssId(id)}`)?.scrollIntoView({behavior:'smooth',block:'center'}); },50); };
         listFree.appendChild(a);
+      });
+
+      // --- Details toggles ---
+      document.getElementById('showTshirts').onclick = ()=>{
+        document.getElementById('tshirtsDetails').classList.toggle('hidden');
+      };
+      document.getElementById('showSlots').onclick = ()=>{
+        document.getElementById('slotsDetails').classList.toggle('hidden');
+      };
+
+      // T-Shirt table + sizes breakdown
+      const tbodyT = document.querySelector('#tblTshirts tbody'); tbodyT.innerHTML='';
+      const sizesCount = {};
+      Object.entries(state.tshirtData).forEach(([name,size])=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${name}</td><td>${size}</td>`;
+        tbodyT.appendChild(tr);
+        sizesCount[size] = (sizesCount[size] || 0) + 1;
+      });
+      const sizesBreak = document.getElementById('sizesBreak'); sizesBreak.innerHTML='';
+      Object.keys(sizesCount).sort().forEach(s=>{
+        const b = document.createElement('span'); b.className='pill'; b.textContent = `${sizesCount[s]}× ${s}`;
+        sizesBreak.appendChild(b);
+      });
+
+      // Slots reserved details
+      const tbodyS = document.querySelector('#tblSlots tbody'); tbodyS.innerHTML='';
+      SLOTS.forEach(id=>{
+        const arr = state.scheduleData[id]||[];
+        if (arr.length>0){
+          const tr = document.createElement('tr');
+          const p1 = arr[0] || '—';
+          const p2 = arr[1] || '—';
+          const etat = (arr.length===2) ? 'Complet' : '1 place restante';
+          tr.innerHTML = `<td>${id}</td><td>${p1}</td><td>${p2}</td><td>${etat}</td>`;
+          tbodyS.appendChild(tr);
+        }
       });
     }
 
