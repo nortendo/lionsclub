@@ -5,162 +5,101 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lions Club La Louvière - Relais pour la Vie</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: linear-gradient(to bottom right, #ff7e5f, #6a82fb);
-      color: #333;
-    }
-    header {
-      text-align: center;
-      padding: 1rem;
-      color: white;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
-    }
-    .tabs {
-      display: flex;
-      justify-content: center;
-      background: white;
-      border-radius: 10px 10px 0 0;
-      margin: 0 1rem;
-      overflow: hidden;
-    }
-    .tabs button {
-      flex: 1;
-      padding: 1rem;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-      background: #eee;
-    }
-    .tabs button.active {
-      background: #ff7e5f;
-      color: white;
-      font-weight: bold;
-    }
-    .tab-content {
-      background: white;
-      margin: 0 1rem 1rem;
-      border-radius: 0 0 10px 10px;
-      padding: 1rem;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 1rem;
-    }
-    .card {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 1rem;
-      text-align: center;
-      cursor: pointer;
-      background: #f9f9f9;
-    }
-    .card.selected {
-      background: #6a82fb;
-      color: white;
-    }
-    .summary {
-      margin-top: 1rem;
-      padding: 1rem;
-      background: #f0f0f0;
-      border-radius: 8px;
-    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu; background: linear-gradient(135deg,#ff7e5f,#6a82fb); min-height:100vh; }
+    .container { max-width: 1100px; margin: 20px auto; background: #fff; border-radius: 14px; box-shadow: 0 18px 40px rgba(0,0,0,.12); overflow:hidden; }
+    header { padding: 28px; text-align:center; color:#fff; background: linear-gradient(45deg,#ff6b6b,#ffa500); }
+    header h1 { margin:0 0 6px; font-size: 2.1rem; text-shadow: 0 2px 8px rgba(0,0,0,.25); }
+    header p { margin:0; opacity:.95; }
+    .tabs { display:flex; gap:0; background:#f1f3f5; }
+    .tab { flex:1; padding:14px 18px; text-align:center; border:none; background:transparent; font-weight:600; color:#6c757d; cursor:pointer; }
+    .tab.active { background:#fff; border-bottom:3px solid #ff7e5f; color:#212529; }
+    .content { padding: 24px; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    .tshirt-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:14px; }
+    .member-card { background:#f8f9fa; border:2px solid #e9ecef; border-radius:12px; padding:14px; }
+    .member-name { font-weight:700; margin-bottom:8px; color:#343a40; }
+    .size-buttons { display:flex; flex-wrap:wrap; gap:6px; }
+    .size-btn { padding:6px 10px; border:2px solid #dee2e6; background:#fff; border-radius:999px; font-weight:700; cursor:pointer; min-width:44px; }
+    .size-btn.selected { background:#ff6b6b; color:#fff; border-color:#ff6b6b; }
+    .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+    .member-select { padding:6px 8px; border:1px solid #ced4da; border-radius:8px; }
+    .schedule-container { background:#f8f9fa; border-radius:12px; padding:14px; margin-bottom:12px; }
+    .day-header { background: linear-gradient(45deg,#667eea,#764ba2); color:#fff; padding:10px 12px; border-radius:10px; margin-bottom:10px; font-weight:800; text-align:center; }
+    .time-slots { display:grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap:10px; }
+    .time-slot { background:#fff; border:2px solid #dee2e6; border-radius:10px; padding:10px; }
+    .time-slot.assigned { background:#e6ffed; border-color:#2ecc71; }
+    .time-range { font-weight:800; margin-bottom:6px; }
+    .assigned-to { display:flex; flex-direction:column; gap:6px; }
+    .chip { display:inline-flex; align-items:center; gap:6px; background:#20c997; color:#fff; border-radius:999px; padding:4px 8px; font-size:.9rem; }
+    .chip button { width:20px; height:20px; border:none; border-radius:50%; background:rgba(0,0,0,.2); color:#fff; cursor:pointer; }
+    .summary { background:linear-gradient(135deg,#28a745,#20c997); color:#fff; border-radius:12px; padding:16px; }
+    .summary-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:10px; }
+    .summary-item { text-align:center; background:rgba(255,255,255,.12); padding:14px; border-radius:10px; }
+    .summary-number { font-size:1.9rem; font-weight:900; }
+    .submit-btn { background:linear-gradient(45deg,#007bff,#0056b3); color:#fff; border:none; border-radius:10px; padding:12px 16px; cursor:pointer; font-weight:800; }
+    .toast { position:fixed; bottom:22px; right:22px; background:#212529; color:#fff; border-radius:10px; padding:10px 14px; box-shadow:0 10px 26px rgba(0,0,0,.25); opacity:0; transform:translateY(8px); transition:all .2s; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    #errorBanner { display:none; margin:0 0 12px; padding:10px 14px; border-radius:10px; background:#fff3cd; border:1px solid #ffeeba; color:#5c4f00; font-weight:700; }
+    #slotsModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; }
+    #slotsModal .panel { background:#fff; border-radius:12px; padding:18px; max-width:720px; width:92%; max-height:80vh; overflow:auto; }
+    #slotsList button { width:100%; text-align:left; border:none; padding:8px 10px; border-radius:8px; background:#e9ecef; cursor:pointer; margin:4px 0; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🚶 Lions Club La Louvière - Relais pour la Vie</h1>
-    <p>La Louvière • 11-12 Octobre 2025</p>
-  </header>
+  <div class="container">
+    <header>
+      <h1>🚶‍♂️ Lions Club La Louvière - Relais pour la Vie</h1>
+      <p>La Louvière • 11–12 Octobre 2025</p>
+    </header>
 
-  <div class="tabs">
-    <button onclick="switchTab('tshirts')" class="active">👕 Tailles T-Shirts</button>
-    <button onclick="switchTab('planning')">📅 Planning Marche</button>
-    <button onclick="switchTab('resume')">📊 Résumé</button>
-  </div>
+    <div id="errorBanner"></div>
 
-  <div id="tshirts" class="tab-content">
-    <h2>Sélection des tailles de t-shirts</h2>
-    <div id="tshirtGrid" class="grid"></div>
-  </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(event,'tshirts')">👕 Tailles T-Shirts</button>
+      <button class="tab" onclick="switchTab(event,'planning')">⏰ Planning Marche</button>
+      <button class="tab" onclick="switchTab(event,'resume')">📊 Résumé</button>
+    </div>
 
-  <div id="planning" class="tab-content" style="display:none">
-    <h2>Créneaux de marche</h2>
-    <div id="planningGrid" class="grid"></div>
-  </div>
+    <div class="content">
+      <div id="tshirts" class="tab-content active">
+        <h2>Sélection des tailles de t-shirts</h2>
+        <div id="tshirtGrid" class="tshirt-grid"></div>
+      </div>
 
-  <div id="resume" class="tab-content" style="display:none">
-    <h2>Résumé</h2>
-    <div id="summaryBox" class="summary"></div>
+      <div id="planning" class="tab-content">
+        <div class="toolbar">
+          <label for="filterMember">Filtrer par membre :</label>
+          <select id="filterMember" class="member-select" onchange="createSchedule()">
+            <option value="">-- Tous les membres --</option>
+          </select>
+        </div>
+        <h2>Planning des créneaux (max 2 personnes / créneau)</h2>
+        <div id="scheduleContainer"></div>
+      </div>
+
+      <div id="resume" class="tab-content">
+        <div class="summary">
+          <h3>📈 Résumé</h3>
+          <div class="summary-grid">
+            <div class="summary-item"><div class="summary-number" id="totalMembers">0</div><div>Membres</div></div>
+            <div class="summary-item"><div class="summary-number" id="tshirtsSelected">0</div><div>T-shirts sélectionnés</div></div>
+            <div class="summary-item"><div class="summary-number" id="slotsAssigned">0</div><div>Créneaux assignés</div></div>
+            <div class="summary-item"><div class="summary-number" id="slotsFree">0</div><div>Créneaux libres</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    let state = {
-      tshirtData: {},
-      scheduleData: {}
-    };
-
-    function switchTab(tab) {
-      document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
-      document.querySelectorAll(".tabs button").forEach(btn => btn.classList.remove("active"));
-      document.getElementById(tab).style.display = "block";
-      event.target.classList.add("active");
-    }
-
-    function createTshirtGrid() {
-      const sizes = ["S", "M", "L", "XL", "XXL"];
-      const grid = document.getElementById("tshirtGrid");
-      grid.innerHTML = "";
-      sizes.forEach(size => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.textContent = size;
-        div.onclick = () => {
-          state.tshirtData[size] = (state.tshirtData[size] || 0) + 1;
-          updateSummary();
-        };
-        grid.appendChild(div);
-      });
-    }
-
-    function createPlanning() {
-      const slots = ["10h-11h", "11h-12h", "12h-13h", "13h-14h", "14h-15h"];
-      const grid = document.getElementById("planningGrid");
-      grid.innerHTML = "";
-      slots.forEach(slot => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.textContent = slot;
-        div.onclick = () => {
-          state.scheduleData[slot] = (state.scheduleData[slot] || 0) + 1;
-          updateSummary();
-        };
-        grid.appendChild(div);
-      });
-    }
-
-    function updateSummary() {
-      const box = document.getElementById("summaryBox");
-      box.innerHTML = "<h3>T-Shirts</h3>";
-      Object.entries(state.tshirtData).forEach(([size, count]) => {
-        box.innerHTML += size + " : " + count + "<br>";
-      });
-      box.innerHTML += "<h3>Planning</h3>";
-      Object.entries(state.scheduleData).forEach(([slot, count]) => {
-        box.innerHTML += slot + " : " + count + "<br>";
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      createTshirtGrid();
-      createPlanning();
-      updateSummary();
-    });
+    // Ici tu insères le même script qu’on a bossé ensemble :
+    // - fetchState depuis Netlify Functions
+    // - createTshirtGrid + selectSize
+    // - createSchedule + assignSlot/removeAssignee
+    // - updateSummary
+    // - polling toutes les 12s
   </script>
 </body>
 </html>
