@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -5,25 +6,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lions Club La Louvière - Relais pour la Vie</title>
   <style>
-    :root { --orange:#ff7a18; --purple:#6a11cb; }
+    :root { --orange:#ff7a18; --purple:#5B5FEF; --green:#1b9e5a; --muted:#666; }
     body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(120deg,#5B5FEF,#9C27B0);min-height:100vh;}
-    .wrap{max-width:1000px;margin:40px auto;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden}
-    header{padding:22px 24px;background:linear-gradient(90deg,var(--orange),#ff3d00);color:#fff;font-weight:800;font-size:32px;letter-spacing:.3px;text-shadow:0 2px 6px rgba(0,0,0,.25)}
+    .wrap{max-width:1100px;margin:40px auto;background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.15);overflow:hidden}
+    header{padding:22px 24px;background:linear-gradient(90deg,var(--orange),#ff3d00);color:#fff;font-weight:800;font-size:32px;text-shadow:0 2px 6px rgba(0,0,0,.25)}
     .sub{padding:0 24px 16px;color:#ffe;opacity:.95}
-    .tabs{display:flex;gap:0;border-bottom:1px solid #eee;background:#fafafa}
+    .tabs{display:flex;border-bottom:1px solid #eee;background:#fafafa}
     .tab-button{flex:1;border:0;border-bottom:3px solid transparent;padding:12px 16px;background:#fafafa;cursor:pointer;font-weight:700}
-    .tab-button.active{border-color:#5B5FEF;background:#fff;color:#5B5FEF}
+    .tab-button.active{border-color:var(--purple);background:#fff;color:var(--purple)}
     main{padding:18px}
-    .row{display:flex;flex-wrap:wrap;gap:12px}
-    .card{border:1px solid #eee;border-radius:12px;padding:12px 14px;min-width:220px}
-    .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    .row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+    .card{border:1px solid #eee;border-radius:12px;padding:12px 14px}
+    .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
     .kpi div{background:#E8F5E9;color:#2E7D32;border-radius:10px;padding:14px;text-align:center;font-weight:700}
     .slot{display:flex;align-items:center;gap:8px;margin:6px 0}
     label{font-size:13px;color:#333}
     select,input,button.action{border:1px solid #ddd;border-radius:8px;padding:8px 10px}
-    button.action{background:#5B5FEF;color:#fff;font-weight:700;cursor:pointer}
-    .muted{color:#666;font-size:12px}
+    button.action{background:var(--purple);color:#fff;font-weight:700;cursor:pointer}
+    button.action:disabled{opacity:.5;cursor:not-allowed}
+    .muted{color:var(--muted);font-size:12px}
     .hidden{display:none}
+    .list{margin-top:10px;max-height:280px;overflow:auto;border:1px dashed #ddd;border-radius:10px;padding:10px}
+    .list a{display:inline-block;margin:4px 6px;text-decoration:none;background:#f6f6ff;border:1px solid #ddd;padding:4px 8px;border-radius:6px}
+    .tag{display:inline-block;background:#f3f3f3;border-radius:6px;padding:2px 8px;margin-left:6px;font-size:12px}
   </style>
 </head>
 <body>
@@ -40,37 +45,58 @@
         <h3>Sélection des tailles</h3>
         <div class="row" id="tshirtsBox"></div>
       </section>
+
       <section id="planning" class="tab-content hidden">
-        <h3>Réserver un créneau (2 personnes / créneau)</h3>
+        <h3>Réserver un créneau (jusqu'à 2 personnes / créneau)</h3>
+        <p class="muted">Si un créneau a déjà 1 personne, une seconde peut se rajouter pour ne pas marcher seul(e). Pas d'obligation de 2.</p>
         <div class="row" id="slotsBox"></div>
       </section>
+
       <section id="resume" class="tab-content hidden">
         <h3>Résumé de l'organisation</h3>
         <div class="kpi">
           <div><span id="k1">0</span><br/>Membres</div>
           <div><span id="k2">0</span><br/>T‑Shirts choisis</div>
           <div><span id="k3">0</span><br/>Créneaux réservés</div>
+          <div><span id="k4">0</span><br/>Créneaux dispo</div>
         </div>
-        <p class="muted">Les données sont partagées en temps réel (Redis Upstash).</p>
+        <h4 style="margin-top:18px;">🔒 Créneaux déjà pris</h4>
+        <div id="listTaken" class="list"></div>
+        <h4 style="margin-top:18px;">✅ Créneaux disponibles</h4>
+        <div id="listFree" class="list"></div>
       </section>
     </main>
   </div>
+
   <script>
-    // Onglets
     function switchTab(id){
       document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
       document.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));
       const btn = Array.from(document.querySelectorAll('.tab-button')).find(b=>b.getAttribute('onclick').includes(id));
       if(btn) btn.classList.add('active');
+      if(id==='planning'){ setTimeout(()=>location.hash='#planning',0); }
     }
-    // Données
+
     const MEMBERS = ["Yvan D","Michelina C","Pasquale D","Enora D","Véronique L","Sandy","Manuela","Christophe G","Pino D","Malika Z","Nolann D","Irina","Le fils de Sandy","Le fils de Manuela","Cyril G","Mario D","Olivier D","Aurore V","Sabrina","Yves E"];
-    const SIZES = ["XS","S","M","L","XL","XXL"];
-    const SLOTS = [
-      "sam 11:00-12:00","sam 12:00-13:00","sam 13:00-14:00","sam 14:00-15:00","sam 15:00-16:00","sam 16:00-17:00","sam 17:00-18:00",
-      "dim 08:00-09:00","dim 09:00-10:00","dim 10:00-11:00","dim 11:00-12:00","dim 12:00-13:00","dim 13:00-14:00"
-    ];
+
+    // Génération des créneaux 30 minutes: Sam 15:00 -> Dim 15:00
+    function genSlots(){
+      // Utilise un samedi/dimanche fictif – labels "sam"/"dim" + HH:MM
+      const start = new Date(2025, 9, 11, 15, 0, 0); // 11 Oct 2025 15:00 (samedi) (mois index 9 = Oct)
+      const end   = new Date(2025, 9, 12, 15, 0, 0); // 12 Oct 2025 15:00 (dimanche)
+      const slots = [];
+      for(let t = new Date(start); t < end; t = new Date(t.getTime() + 30*60*1000)){
+        const t2 = new Date(t.getTime() + 30*60*1000);
+        const dow = t.getDay(); // 6 = samedi, 0 = dimanche
+        const pfx = (dow===6? 'sam' : 'dim');
+        const fmt = (d)=> d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',hour12:false});
+        slots.push(`${pfx} ${fmt(t)}-${fmt(t2)}`);
+      }
+      return slots;
+    }
+    const SLOTS = genSlots();
+
     async function getState(){ const r = await fetch('/api/state-get'); return r.json(); }
     async function setTshirt(name,size,email=""){
       const r = await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,size,email})});
@@ -80,44 +106,81 @@
       const r = await fetch('/api/state-set-slot',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slotId,name})});
       return r.json();
     }
+
     function renderTshirts(state){
       const box = document.getElementById('tshirtsBox'); box.innerHTML='';
+      const sizes = ["XS","S","M","L","XL","XXL"];
       MEMBERS.forEach(m=>{
         const div = document.createElement('div'); div.className='card';
         const sel = document.createElement('select');
-        SIZES.forEach(s=>{ const o=document.createElement('option'); o.value=s;o.textContent=s; sel.appendChild(o); });
+        const ph = document.createElement('option'); ph.value=""; ph.textContent="-- Choisir une taille --"; sel.appendChild(ph);
+        sizes.forEach(s=>{ const o=document.createElement('option'); o.value=s;o.textContent=s; sel.appendChild(o); });
         sel.value = state.tshirtData[m] || "";
-        const btn = document.createElement('button'); btn.textContent='Enregistrer'; btn.className='action';
-        btn.onclick = async ()=>{ await setTshirt(m, sel.value); load(); };
+        const btn = document.createElement('button'); btn.textContent='Enregistrer'; btn.className='action'; btn.disabled = !sel.value;
+        sel.addEventListener('change', ()=>{ btn.disabled = !sel.value; });
+        btn.onclick = async ()=>{ if(!sel.value) return; await setTshirt(m, sel.value); load(); };
         div.innerHTML = `<strong>${m}</strong><br/>`;
         div.appendChild(sel); div.appendChild(document.createElement('br')); div.appendChild(btn);
         box.appendChild(div);
       });
     }
+
     function renderSlots(state){
       const box = document.getElementById('slotsBox'); box.innerHTML='';
       SLOTS.forEach(id=>{
-        const div = document.createElement('div'); div.className='card';
+        const div = document.createElement('div'); div.className='card'; div.id = `slot-${cssId(id)}`;
         const sel = document.createElement('select');
+        const ph = document.createElement('option'); ph.value=""; ph.textContent="-- Choisir une personne --"; sel.appendChild(ph);
         MEMBERS.forEach(m=>{ const o=document.createElement('option'); o.value=m;o.textContent=m; sel.appendChild(o); });
-        const btn = document.createElement('button'); btn.textContent='Réserver'; btn.className='action';
-        btn.onclick = async ()=>{ await setSlot(id, sel.value); load(); };
-        const taken = (state.scheduleData[id]||[]).join(', ') || '—';
-        div.innerHTML = `<strong>${id}</strong><div class="muted">Occupé: ${taken}</div>`;
+        sel.value = "";
+        const btn = document.createElement('button'); btn.textContent='Réserver'; btn.className='action'; btn.disabled = true;
+        sel.addEventListener('change', ()=>{ btn.disabled = !sel.value; });
+        btn.onclick = async ()=>{ if(!sel.value) return; await setSlot(id, sel.value); load(); };
+        const takenArr = (state.scheduleData[id]||[]);
+        const takenTxt = takenArr.join(', ') || '—';
+        const spotsLeft = Math.max(0, 2 - takenArr.length);
+        div.innerHTML = `<strong>${id}</strong><span class="tag">${spotsLeft} place(s) restante(s)</span><div class="muted">Occupé: ${takenTxt}</div>`;
         div.appendChild(sel); div.appendChild(document.createElement('br')); div.appendChild(btn);
+        // désactiver si plein
+        if (takenArr.length >= 2) { sel.disabled = true; btn.disabled = true; }
         box.appendChild(div);
       });
     }
-    function renderKpis(state){
+
+    function cssId(s){ return s.replace(/[^a-z0-9]+/gi,'-'); }
+
+    function renderKpisAndLinks(state){
+      const taken = [], free = [];
+      SLOTS.forEach(id => {
+        const n = (state.scheduleData[id]||[]).length;
+        if (n > 0) taken.push(id);
+        if (n < 2) free.push(id);
+      });
       document.getElementById('k1').textContent = state.members.length;
       document.getElementById('k2').textContent = Object.keys(state.tshirtData).length;
-      document.getElementById('k3').textContent = Object.values(state.scheduleData).reduce((a,b)=>a+(b?.length||0),0);
+      document.getElementById('k3').textContent = SLOTS.reduce((a,id)=>a + ((state.scheduleData[id]||[]).length), 0);
+      document.getElementById('k4').textContent = free.length;
+
+      // Liens
+      const listTaken = document.getElementById('listTaken'); listTaken.innerHTML='';
+      taken.forEach(id=>{
+        const a = document.createElement('a'); a.href = `#slot-${cssId(id)}`; a.textContent = id;
+        a.onclick = ()=>{ switchTab('planning'); setTimeout(()=>{ document.getElementById(`slot-${cssId(id)}`)?.scrollIntoView({behavior:'smooth',block:'center'}); },50); };
+        listTaken.appendChild(a);
+      });
+      const listFree = document.getElementById('listFree'); listFree.innerHTML='';
+      free.forEach(id=>{
+        const a = document.createElement('a'); a.href = `#slot-${cssId(id)}`; a.textContent = id;
+        a.onclick = ()=>{ switchTab('planning'); setTimeout(()=>{ document.getElementById(`slot-${cssId(id)}`)?.scrollIntoView({behavior:'smooth',block:'center'}); },50); };
+        listFree.appendChild(a);
+      });
     }
+
     async function load(){
       const state = await getState();
       renderTshirts(state);
       renderSlots(state);
-      renderKpis(state);
+      renderKpisAndLinks(state);
     }
     load(); setInterval(load, 10000);
   </script>
