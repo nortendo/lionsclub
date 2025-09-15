@@ -11,13 +11,12 @@ export default async function handler(req, res) {
   cur[member] = size ?? null;
 
   const ops = [["SET", "state:tshirts", JSON.stringify(cur)]];
-  if (Array.isArray(members) && members.length) ops.push(["SET", "state:members", JSON.stringify(members)]);
+  if (Array.isArray(members) && members.length) ops.push(["SET","state:members", JSON.stringify(members)]);
 
   await fetch(process.env.UPSTASH_REDIS_REST_URL + "/pipeline", {
     method: "POST",
-    headers: { "content-type": "application/json", ...h },
+    headers: { "content-type":"application/json", ...h },
     body: JSON.stringify(ops)
   });
-
   res.status(200).end("ok");
 }
