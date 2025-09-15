@@ -1,8 +1,0 @@
-{
-  "name": "lionsclub-app",
-  "version": "1.0.0",
-  "scripts": {
-    "start": "netlify dev"
-  },
-  "dependencies": {}
-}
