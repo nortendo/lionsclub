@@ -15,7 +15,7 @@
     .tab-button{flex:1;border:0;border-bottom:3px solid transparent;padding:12px 16px;background:#fafafa;cursor:pointer;font-weight:700}
     .tab-button.active{border-color:var(--purple);background:#fff;color:var(--purple)}
     main{padding:18px}
-    .row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+    .row{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
     .card{border:1px solid #eee;border-radius:12px;padding:12px 14px}
     .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
     .kpi div{background:#E8F5E9;color:#2E7D32;border-radius:10px;padding:14px;text-align:center;font-weight:700}
@@ -29,6 +29,8 @@
     .list{margin-top:10px;max-height:280px;overflow:auto;border:1px dashed #ddd;border-radius:10px;padding:10px}
     .list a{display:inline-block;margin:4px 6px;text-decoration:none;background:#f6f6ff;border:1px solid #ddd;padding:4px 8px;border-radius:6px}
     .tag{display:inline-block;background:#f3f3f3;border-radius:6px;padding:2px 8px;margin-left:6px;font-size:12px}
+    .posrow{display:flex; gap:8px; align-items:center; margin:6px 0;}
+    .posrow label{width:60px; color:#555;}
   </style>
 </head>
 <body>
@@ -48,7 +50,7 @@
 
       <section id="planning" class="tab-content hidden">
         <h3>Réserver un créneau (jusqu'à 2 personnes / créneau)</h3>
-        <p class="muted">Si un créneau a déjà 1 personne, une seconde peut se rajouter pour ne pas marcher seul(e). Pas d'obligation de 2.</p>
+        <p class="muted">Si un créneau a déjà 1 personne, une seconde peut se rajouter pour ne pas marcher seul(e). Pas d'obligation d'être 2.</p>
         <div class="row" id="slotsBox"></div>
       </section>
 
@@ -80,15 +82,13 @@
 
     const MEMBERS = ["Yvan D","Michelina C","Pasquale D","Enora D","Véronique L","Sandy","Manuela","Christophe G","Pino D","Malika Z","Nolann D","Irina","Le fils de Sandy","Le fils de Manuela","Cyril G","Mario D","Olivier D","Aurore V","Sabrina","Yves E"];
 
-    // Génération des créneaux 30 minutes: Sam 15:00 -> Dim 15:00
     function genSlots(){
-      // Utilise un samedi/dimanche fictif – labels "sam"/"dim" + HH:MM
-      const start = new Date(2025, 9, 11, 15, 0, 0); // 11 Oct 2025 15:00 (samedi) (mois index 9 = Oct)
-      const end   = new Date(2025, 9, 12, 15, 0, 0); // 12 Oct 2025 15:00 (dimanche)
+      const start = new Date(2025, 9, 11, 15, 0, 0);
+      const end   = new Date(2025, 9, 12, 15, 0, 0);
       const slots = [];
       for(let t = new Date(start); t < end; t = new Date(t.getTime() + 30*60*1000)){
         const t2 = new Date(t.getTime() + 30*60*1000);
-        const dow = t.getDay(); // 6 = samedi, 0 = dimanche
+        const dow = t.getDay();
         const pfx = (dow===6? 'sam' : 'dim');
         const fmt = (d)=> d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',hour12:false});
         slots.push(`${pfx} ${fmt(t)}-${fmt(t2)}`);
@@ -125,29 +125,51 @@
       });
     }
 
+    function cssId(s){ return s.replace(/[^a-z0-9]+/gi,'-'); }
+
     function renderSlots(state){
       const box = document.getElementById('slotsBox'); box.innerHTML='';
       SLOTS.forEach(id=>{
         const div = document.createElement('div'); div.className='card'; div.id = `slot-${cssId(id)}`;
-        const sel = document.createElement('select');
-        const ph = document.createElement('option'); ph.value=""; ph.textContent="-- Choisir une personne --"; sel.appendChild(ph);
-        MEMBERS.forEach(m=>{ const o=document.createElement('option'); o.value=m;o.textContent=m; sel.appendChild(o); });
-        sel.value = "";
-        const btn = document.createElement('button'); btn.textContent='Réserver'; btn.className='action'; btn.disabled = true;
-        sel.addEventListener('change', ()=>{ btn.disabled = !sel.value; });
-        btn.onclick = async ()=>{ if(!sel.value) return; await setSlot(id, sel.value); load(); };
         const takenArr = (state.scheduleData[id]||[]);
-        const takenTxt = takenArr.join(', ') || '—';
         const spotsLeft = Math.max(0, 2 - takenArr.length);
+        const takenTxt = takenArr.join(', ') || '—';
         div.innerHTML = `<strong>${id}</strong><span class="tag">${spotsLeft} place(s) restante(s)</span><div class="muted">Occupé: ${takenTxt}</div>`;
-        div.appendChild(sel); div.appendChild(document.createElement('br')); div.appendChild(btn);
-        // désactiver si plein
-        if (takenArr.length >= 2) { sel.disabled = true; btn.disabled = true; }
+
+        // Deux positions fixes (0 et 1)
+        for(let pos=0; pos<2; pos++){
+          const row = document.createElement('div'); row.className='posrow';
+          const label = document.createElement('label'); label.textContent = `Pers. ${pos+1}`;
+
+          const sel = document.createElement('select');
+          const ph = document.createElement('option'); ph.value=""; ph.textContent="-- Choisir une personne --"; sel.appendChild(ph);
+          MEMBERS.forEach(m=>{ const o=document.createElement('option'); o.value=m;o.textContent=m; sel.appendChild(o); });
+
+          const already = takenArr[pos] || "";
+          if (already) {
+            sel.value = already;
+            sel.disabled = true;
+          }
+
+          const btn = document.createElement('button'); btn.textContent = already ? 'Complet' : 'Réserver';
+          btn.className='action';
+          btn.disabled = already ? true : true; // activé quand on choisit un nom
+          sel.addEventListener('change', ()=>{ btn.disabled = !sel.value; });
+          btn.onclick = async ()=>{
+            if (!sel.value) return;
+            await setSlot(id, sel.value);
+            load();
+          };
+
+          row.appendChild(label);
+          row.appendChild(sel);
+          row.appendChild(btn);
+          div.appendChild(row);
+        }
+
         box.appendChild(div);
       });
     }
-
-    function cssId(s){ return s.replace(/[^a-z0-9]+/gi,'-'); }
 
     function renderKpisAndLinks(state){
       const taken = [], free = [];
@@ -161,7 +183,6 @@
       document.getElementById('k3').textContent = SLOTS.reduce((a,id)=>a + ((state.scheduleData[id]||[]).length), 0);
       document.getElementById('k4').textContent = free.length;
 
-      // Liens
       const listTaken = document.getElementById('listTaken'); listTaken.innerHTML='';
       taken.forEach(id=>{
         const a = document.createElement('a'); a.href = `#slot-${cssId(id)}`; a.textContent = id;
