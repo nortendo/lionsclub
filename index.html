@@ -115,31 +115,7 @@ function addMin(dt, min){ return new Date(dt.getTime()+min*60000); }
 // API helpers
 async function apiGet(){ const r=await fetch('/api/state-get'); return r.json(); }
 async function apiSetTshirt(name,size){
-  await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'}
-async function apiClearTshirt(name){
-  // Try 1: remove:true
-  try{
-    const r = await fetch('/api/state-set-tshirt', {
-      method:'POST', headers:{'content-type':'application/json'},
-      body: JSON.stringify({ name, remove:true })
-    });
-    if (r.ok) return;
-  }catch(e){ /* fallthrough */ }
-  // Try 2: size:null
-  try{
-    const r2 = await fetch('/api/state-set-tshirt', {
-      method:'POST', headers:{'content-type':'application/json'},
-      body: JSON.stringify({ name, size: null })
-    });
-    if (r2.ok) return;
-  }catch(e){ /* fallthrough */ }
-  // Try 3: size:'' (legacy)
-  await fetch('/api/state-set-tshirt', {
-    method:'POST', headers:{'content-type':'application/json'},
-    body: JSON.stringify({ name, size: '' })
-  });
-}
-,body:JSON.stringify({name, size})});
+  await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name, size})});
 }
 async function apiSetSlot(slotId,pos,name,remove=false){
   await fetch('/api/state-set-slot',{method:'POST',headers:{'content-type':'application/json'},
@@ -210,28 +186,13 @@ function renderTshirts(){
       renderTshirts();
     });
   });
-  
   // clear
   content.querySelectorAll('[data-clear]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+    btn.addEventListener('click', async ()=>{
       const name = btn.dataset.clear;
-      // Update UI in place: show empty select and keep focus
-      const sel = content.querySelector(`select[data-name="${name}"]`);
-      if (sel){
-        sel.disabled = false;
-        sel.value = '';
-        sel.focus();
-      }
-      // Update local state optimistically
-      if (!state.tshirtData) state.tshirtData = {};
-      state.tshirtData[name] = '';
-      // Background server sync (no blocking/no re-render)
-      apiClearTshirt(name).then(()=> loadState().catch(()=>{})).catch(()=>{});
-      // Also update the little badge area (hide button + badge) without full re-render
-      const parentRow = btn.closest('.row');
-      if (parentRow){
-        parentRow.innerHTML = '';
-      }
+      await apiSetTshirt(name, '');
+      await loadState();
+      renderTshirts();
     });
   });
 }
