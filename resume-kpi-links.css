@@ -1,0 +1,11 @@
+
+.kpi-inline-link {
+  display: inline-block;
+  margin-top: .25rem;
+  font-size: .875rem;
+  color: #2563eb;
+  text-decoration: underline;
+}
+.kpi-inline-link:hover {
+  color: #1d4ed8;
+}
