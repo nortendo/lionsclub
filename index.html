@@ -114,14 +114,8 @@ function addMin(dt, min){ return new Date(dt.getTime()+min*60000); }
 
 // API helpers
 async function apiGet(){ const r=await fetch('/api/state-get'); return r.json(); }
-async function apiSetTshirt(name,size,remove=false){
-  // Support remove semantics for servers expecting either {remove:true} or size=null/''
-  const body = remove ? { name, remove: true } : { name, size: (size ?? '') };
-  await fetch('/api/state-set-tshirt', {
-    method:'POST',
-    headers:{'content-type':'application/json'},
-    body: JSON.stringify(body)
-  });
+async function apiSetTshirt(name,size){
+  await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name, size})});
 }
 async function apiSetSlot(slotId,pos,name,remove=false){
   await fetch('/api/state-set-slot',{method:'POST',headers:{'content-type':'application/json'},
@@ -176,29 +170,9 @@ function renderTshirts(){
   }).join('');
 
   content.innerHTML = `
-    <h3 class=\"section-title\">Sélection des tailles de t-shirts</h3>
-    <div class=\"row\" style=\"justify-content:space-between;align-items:center;margin:8px 0 12px\">
-      <div class=\"hint\">Choisis une taille pour chaque personne. Tu peux ensuite la retirer si besoin.</div>
-      <button class=\"btn small ghost\" id=\"clear-all-shirts\">Tout retirer</button>
-    </div>
-    <div class=\"grid\">${rows}</div>
+    <h3 class="section-title">Sélection des tailles de t-shirts</h3>
+    <div class="grid">${rows}</div>
   `;
-
-  // bulk clear all chosen sizes
-  const clearAll = content.querySelector('#clear-all-shirts');
-  if (clearAll){
-    clearAll.addEventListener('click', async ()=>{
-      const chosen = Object.keys(state.tshirtData).filter(n => !!state.tshirtData[n]);
-      if (chosen.length === 0) return;
-      // Optimistic: clear all locally first
-      chosen.forEach(n => state.tshirtData[n] = '');
-      renderTshirts();
-      // Server updates
-      await Promise.all(chosen.map(n => apiSetTshirt(n, null, true)));
-      await loadState();
-      renderTshirts();
-    });
-  }
 
   // auto-save + freeze
   content.querySelectorAll('select[data-name]').forEach(sel=>{
@@ -216,11 +190,7 @@ function renderTshirts(){
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const name = btn.dataset.clear;
-      // Optimistic UI update
-      state.tshirtData[name] = '';
-      renderTshirts();
-      // Server update with explicit remove
-      await apiSetTshirt(name, null, true);
+      await apiSetTshirt(name, '');
       await loadState();
       renderTshirts();
     });
