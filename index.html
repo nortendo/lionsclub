@@ -181,7 +181,43 @@ function renderTshirts(){
 
   
 
-  // ---- Robust KPI navigation (idempotent) ----
+  
+
+  // -- Final robust KPI bindings: no hash navigation, single handler --
+  (function(){
+    const scrollToId = (id)=>{
+      const el = document.getElementById(id);
+      if(el && typeof el.scrollIntoView === 'function'){
+        el.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    };
+    const bind = (cardId, targetId)=>{
+      const card = document.getElementById(cardId);
+      if(!card) return;
+      card.style.cursor='pointer';
+      const go = ()=> scrollToId(targetId);
+      // Click on the whole card
+      card.addEventListener('click', (e)=>{
+        // prevent double triggers
+        e.preventDefault(); e.stopPropagation();
+        go();
+      }, { once:false });
+      // Click on the underlined number
+      const num = card.querySelector('.v .linkval');
+      if(num){
+        num.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); go(); });
+      }
+    };
+    bind('kpi-shirts','section-shirts');
+    bind('kpi-taken','section-slots');
+    const inc = document.getElementById('kpi-incomplete');
+    if(inc){
+      inc.style.cursor='pointer';
+      inc.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); document.querySelector('[data-tab="tshirts"]')?.click(); });
+    }
+  })();
+
+// ---- Robust KPI navigation (idempotent) ----
   (function bindResumeKpis(){
     const scrollToId = (id)=>{
       const el = document.getElementById(id);
@@ -471,12 +507,12 @@ function renderResume(){
 
       <div class="kpi link" id="kpi-shirts">
         <div class="row"><span class="pill">T-Shirts choisis</span></div>
-        <div class="v"><a href="#section-shirts" style="text-decoration:underline; cursor:pointer;">${tshirtChosen}</a></div>
+        <div class="v"><span class="linkval" data-target="section-shirts" style="text-decoration:underline;cursor:pointer;">${tshirtChosen}</span></div>
       </div>
 
       <div class="kpi link" id="kpi-taken">
         <div class="row"><span class="pill">Créneaux réservés</span></div>
-        <div class="v"><a href="#section-slots" style="text-decoration:underline; cursor:pointer;">${taken}</a></div>
+        <div class="v"><span class="linkval" data-target="section-slots" style="text-decoration:underline;cursor:pointer;">${taken}</span></div>
       </div>
 
       <div class="kpi">
