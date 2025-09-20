@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Lions Club - Relais pour la Vie - La Louvière</title>
+  <title>Lions Club - Relais pour la Vie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
       width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:10px;background:#fff
     }
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 10px}
-    .kpi{cursor:default;
+    .kpi{
       border:1px solid #e2e8f0;border-radius:12px;padding:14px;background:#fff;min-height:86px;
       display:flex;flex-direction:column;gap:8px;justify-content:center
     }
@@ -75,7 +75,7 @@
 <body>
   <div class="wrap">
     <div class="header">
-      <div class="title">Lions Club-Relais pour la Vie-Parc de l'Arboretum-La Louvière</div>
+      <div class="title">Lions Club - Relais pour la Vie</div>
       <div class="subtitle">11–12 Octobre 2025</div>
     </div>
 
@@ -95,7 +95,7 @@
 const MEMBERS = [
   "Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V",
   "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"
-, "Mario D", "Veronique L", "Sandy L"];
+];
 
 // slots 30 min: sam 15:00 -> dim 15:00
 const start = new Date("2025-10-11T13:00:00Z"); // 15:00 local BE (UTC+2 en été) ≈ 13:00Z
@@ -113,7 +113,10 @@ function slotIdFromDate(dt){
 function addMin(dt, min){ return new Date(dt.getTime()+min*60000); }
 
 // API helpers
-async function apiGet(){ const r=await fetch('/api/state-get'); return r.json(); }
+async function apiGet(){ 
+  const r=await fetch('/api/state-get'); 
+  return r.json(); 
+}
 async function apiSetTshirt(name,size){
   await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name, size})});
 }
@@ -150,7 +153,7 @@ function renderTshirts(){
   const sizes = ['XS','S','M','L','XL','XXL'];
   const rows = MEMBERS.map(name=>{
     const val = state.tshirtData[name] || '';
-    const hasSize = val && val !== ''; // Vérifier si on a vraiment une taille
+    const hasSize = val && val !== '';
     const opts = ['<option value="">-- Choisir une taille --</option>']
       .concat(sizes.map(s=>`<option value="${s}" ${val===s?'selected':''}>${s}</option>`)).join('');
     const disabled = hasSize ? 'disabled' : '';
@@ -175,137 +178,7 @@ function renderTshirts(){
     <div class="grid">${rows}</div>
   `;
 
-  
-  
-  
-
-  
-
-  
-
-  
-
-  // ---- Smart scroll with robust fallbacks ----
-  function _scrollToSmart(id){
-    const el = document.getElementById(id);
-    if(!el){ location.hash = '#'+id; return; }
-    const before = el.getBoundingClientRect().top;
-    if(typeof el.scrollIntoView === 'function'){
-      try { el.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){ el.scrollIntoView(); }
-    } else {
-      location.hash = '#'+id; // fallback
-    }
-    // If nothing moved (e.g., container not ready), retry next tick via hash
-    requestAnimationFrame(()=>{
-      const after = el.getBoundingClientRect().top;
-      if(Math.abs(after - before) < 2){
-        location.hash = '#'+id;
-      }
-    });
-  }
-
-// -- Final robust KPI bindings: no hash navigation, single handler --
-  (function(){
-    const scrollToId = (id)=>{
-      const el = document.getElementById(id);
-      if(el && typeof el.scrollIntoView === 'function'){
-        el.scrollIntoView({behavior:'smooth', block:'start'});
-      }
-    };
-    const bind = (cardId, targetId)=>{
-      const card = document.getElementById(cardId);
-      if(!card) return;
-      card.style.cursor='pointer';
-      const go = ()=> _scrollToSmart(targetId);
-      // Click on the whole card
-      card.addEventListener('click', (e)=>{
-        // prevent double triggers
-        e.preventDefault(); e.stopPropagation();
-        _scrollToSmart(targetId);
-      }, { once:false });
-      // Click on the underlined number
-      const num = card.querySelector('.v .linkval');
-      if(num){
-        num.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); _scrollToSmart(targetId); });
-      }
-    };
-    bind('kpi-shirts','section-shirts');
-    bind('kpi-taken','section-slots');
-    const inc = document.getElementById('kpi-incomplete');
-    if(inc){
-      inc.style.cursor='pointer';
-      inc.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); document.querySelector('[data-tab="tshirts"]')?.click(); });
-    }
-  })();
-
-// ---- Robust KPI navigation (idempotent) ----
-  (function bindResumeKpis(){
-    const scrollToId = (id)=>{
-      const el = document.getElementById(id);
-      if (el && typeof el.scrollIntoView === 'function') {
-        el.scrollIntoView({behavior:'smooth'});
-      }
-    };
-    const bindCard = (id, target)=>{
-      const card = document.getElementById(id);
-      if(!card) return;
-      card.style.cursor = 'pointer';
-      card.addEventListener('click', (e)=>{
-        // avoid double-trigger when clicking the inner link
-        if(e.target.closest('.v a')) return;
-        _scrollToSmart(target);
-      });
-      const a = card.querySelector('.v a');
-      if(a){
-        a.addEventListener('click', (e)=>{ e.preventDefault(); _scrollToSmart(target); });
-        a.style.textDecoration = 'underline';
-      }
-    };
-    bindCard('kpi-shirts','section-shirts');
-    bindCard('kpi-taken','section-slots');
-    const inc = document.getElementById('kpi-incomplete');
-    if(inc){
-      inc.style.cursor='pointer';
-      inc.addEventListener('click', ()=> document.querySelector('[data-tab="tshirts"]')?.click());
-    }
-    // Event delegation for any hash links inside the Resume card (fallback)
-    content?.addEventListener('click', (e)=>{
-      const a = e.target.closest('a[href^="#section-"]');
-      if(!a) return;
-      const id = a.getAttribute('href').slice(1);
-      if(id){ e.preventDefault(); _scrollToSmart(id); }
-    });
-  })();
-
-// Robust KPI bindings (card + number). Prevent default and scroll.
-  const _scrollTo = (id)=>{ const el = document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth'}); } };
-  const _bind = (id, target)=>{
-    const card = document.getElementById(id);
-    if(card){ card.style.cursor='pointer'; card.addEventListener('click', ()=> _scrollTo(target)); }
-    // if we wrapped the number in an <a>, catch it too
-    const valAnchor = card?.querySelector('.v a');
-    if(valAnchor){
-      valAnchor.addEventListener('click', (e)=>{ e.preventDefault(); _scrollTo(target); });
-      valAnchor.style.textDecoration = 'underline';
-    }
-  };
-  _bind('kpi-shirts','section-shirts');
-  _bind('kpi-taken','section-slots');
-  const inc = document.getElementById('kpi-incomplete');
-  if(inc){
-    inc.style.cursor='pointer';
-    inc.addEventListener('click', ()=> document.querySelector('[data-tab="tshirts"]')?.click());
-  }
-
-// KPI scroll bindings (robust)
-  document.getElementById('kpi-shirts')?.addEventListener('click', ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'}));
-  document.getElementById('kpi-taken')?.addEventListener('click', ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'}));
-// Admin buttons
-  document.getElementById('btn-save-snap')?.addEventListener('click', saveSnapshot);
-  document.getElementById('btn-restore-snap')?.addEventListener('click', ()=>{ if(confirm('Restaurer l\'état sauvegardé ? Cela écrasera les réservations actuelles.')) restoreSnapshot(); });
-  document.getElementById('btn-purge-out')?.addEventListener('click', ()=>{ if(confirm('Confirmer la purge des créneaux hors plage ?')) adminPurgeOutOfRange(); });
-  document.getElementById('btn-clear-visible')?.addEventListener('click', ()=>{ if(confirm('Remettre à zéro TOUS les créneaux visibles ?')) adminClearVisible(); });
-// auto-save + freeze
+  // auto-save + freeze
   content.querySelectorAll('select[data-name]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
       const name = sel.dataset.name;
@@ -328,27 +201,22 @@ function renderTshirts(){
       }, 200);
     });
   });
+
   // clear
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
-      if (btn.disabled) return; // Éviter les clics multiples
+      if (btn.disabled) return;
       
       const name = btn.dataset.clear;
       btn.disabled = true;
       btn.textContent = 'Suppression...';
       
       try {
-        console.log('Envoi requête de suppression pour:', name, 'avec size: null');
         await apiSetTshirt(name, null);
-        console.log('Requête API réussie, rechargement de l\'état...');
         await loadState();
-        console.log('État rechargé, re-render...');
         renderTshirts();
-        console.log('Re-render terminé');
       } catch (error) {
-        console.error('Erreur détaillée:', error);
         alert(`Erreur lors de la suppression: ${error.message}`);
-        // Remettre le bouton en état en cas d'erreur
         btn.disabled = false;
         btn.textContent = 'Retirer';
       }
@@ -438,7 +306,7 @@ function renderPlanning(){
   content.querySelectorAll('select.select[data-id]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
       const slotId = sel.dataset.id;
-      const pos = sel.dataset.pos === '1' ? 'p1' : 'p2'; // Convertir 1->p1, 2->p2
+      const pos = sel.dataset.pos === '1' ? 'p1' : 'p2';
       const name = sel.value;
       if(!name) return;
       sel.disabled = true;
@@ -451,8 +319,8 @@ function renderPlanning(){
   content.querySelectorAll('[data-remove]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const slotId = btn.dataset.id;
-      const pos = btn.dataset.pos; // pos est déjà "1" ou "2" dans le HTML
-      const properPos = pos === '1' ? 'p1' : 'p2'; // Convertir pour l'API
+      const pos = btn.dataset.pos;
+      const properPos = pos === '1' ? 'p1' : 'p2';
       await apiSetSlot(slotId, properPos, null, true);
       await loadState();
       renderPlanning();
@@ -462,27 +330,15 @@ function renderPlanning(){
 
 /** ========= RENDER: RESUME ========= */
 function computeKpis(){
-  const allMembers = state.members.length ? state.members : MEMBERS;
-  const slots = buildAllSlots();
+  const tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
+  const taken = Object.values(state.scheduleData).reduce((acc, s)=> acc + (s?.p1?1:0) + (s?.p2?1:0), 0);
+  const totalSlots = buildAllSlots().length * 2;
+  const available = totalSlots - taken;
 
-  let tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
-
-  // Compter uniquement les réservations dans les slots visibles
-  let taken = slots.reduce((acc,s)=>{
-    const occ = state.scheduleData[s.id]||{};
-    return acc + (occ.p1?1:0) + (occ.p2?1:0);
-  },0);
-
-  const totalSlots = slots.length * 2;
-  let available = totalSlots - taken;
-
-  let noShirtNoSlot = allMembers.filter(n => {
-    const hasTshirt = !!state.tshirtData[n];
-    const hasSlot = slots.some(s => {
-      const occ = state.scheduleData[s.id]||{};
-      return occ.p1===n || occ.p2===n;
-    });
-    return !hasTshirt && !hasSlot;
+  const noShirtNoSlot = MEMBERS.filter(n=>{
+    const hasT = !!state.tshirtData[n];
+    const hasS = Object.values(state.scheduleData).some(s=>s?.p1===n || s?.p2===n);
+    return !hasT && !hasS;
   }).length;
 
   return { tshirtChosen, taken, available, noShirtNoSlot };
@@ -491,8 +347,7 @@ function computeKpis(){
 function renderResume(){
   const { tshirtChosen, taken, available, noShirtNoSlot } = computeKpis();
 
-  showAdminIfAny();
-// détails t-shirts
+  // détails t-shirts
   const rows = MEMBERS
     .filter(n=> state.tshirtData[n])
     .map(n=> `<tr><td>${n}</td><td>${state.tshirtData[n]}</td></tr>`).join('') || `<tr><td colspan="2" class="muted">—</td></tr>`;
@@ -506,7 +361,6 @@ function renderResume(){
   const takenChips = all.map(s=>{
     const occ = state.scheduleData[s.id];
     if(!occ?.p1 && !occ?.p2) return '';
-    const p1 = occ.p1||'—', p2 = occ.p2||'—';
     return `<a class="chip" href="#slot-${s.start.toISOString()}">${fmtLocal(s.start)}</a>`;
   }).filter(Boolean).join('') || '<span class="muted">—</span>';
 
@@ -528,49 +382,18 @@ function renderResume(){
 
       <div class="kpi link" id="kpi-shirts">
         <div class="row"><span class="pill">T-Shirts choisis</span></div>
-        <div class="v"><span class="linkval" data-target="section-shirts" style="text-decoration:underline;cursor:pointer;">${tshirtChosen}</span></div>
+        <div class="v">${tshirtChosen}</div>
       </div>
 
       <div class="kpi link" id="kpi-taken">
         <div class="row"><span class="pill">Créneaux réservés</span></div>
-        <div class="v"><span class="linkval" data-target="section-slots" style="text-decoration:underline;cursor:pointer;">${taken}</span></div>
+        <div class="v">${taken}</div>
       </div>
 
       <div class="kpi">
         <div class="row"><span class="pill" style="background:#ecfdf3;color:#065f46">Créneaux dispo</span></div>
         <div class="v">${available}</div>
       </div>
-    <div id="admin-panel" style="display:none"><div class="card" style="border:1px dashed #e2e8f0;background:#fafafa;margin-top:12px">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div class="label">Outils admin (maintenance)</div>
-        <div class="row" style="gap:8px">
-          <button class="btn small ghost" id="btn-purge-out">Purger hors plage</button>
-          <button class="btn small ghost" id="btn-clear-visible">Vider créneaux visibles</button>
-<button class="btn small" id="btn-save-snap">Sauvegarder état</button>
-<button class="btn small" id="btn-restore-snap">Restaurer état</button>
-        </div>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <span class="muted">« Purger hors plage » supprime les réservations qui ne sont pas dans la fenêtre sam 15:00 → dim 15:00. « Vider créneaux visibles » remet à zéro la fenêtre visible.</span>
-      </div>
-
-    <div class="card" id="debug-card" style="background:#fffdf7;border:1px solid #facc15;margin-top:12px">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div class="row" style="gap:8px;align-items:center">
-          <span>🛠️ <strong>Détails des réservations (débogage)</strong></span>
-          <span class="label">Plage visible uniquement</span>
-        </div>
-        <button class="btn small" id="btn-refresh-debug">Actualiser</button>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div id="debug-list" class="slot-card" style="width:100%">
-          <div class="label">Liste des créneaux pris — p1 / p2</div>
-          <div id="debug-container" class="row" style="gap:6px;flex-direction:column"></div>
-        </div>
-      </div>
-    </div></div>
-
-    <div class="row" style="gap:16px;margin:8px 0 2px">
     </div>
 
     <div class="divider"></div>
@@ -593,135 +416,30 @@ function renderResume(){
     <div class="chips">${freeChips}</div>
   `;
 
-  // KPI anchors
+  // KPI anchors - liaison avec les sections de détails
+  const kpiShirts = document.getElementById('kpi-shirts');
+  const kpiTaken = document.getElementById('kpi-taken');
+  const kpiIncomplete = document.getElementById('kpi-incomplete');
   
+  if (kpiShirts) {
+    kpiShirts.onclick = () => {
+      const target = document.getElementById('section-shirts');
+      if (target) target.scrollIntoView({behavior:'smooth'});
+    };
+  }
   
+  if (kpiTaken) {
+    kpiTaken.onclick = () => {
+      const target = document.getElementById('section-slots');
+      if (target) target.scrollIntoView({behavior:'smooth'});
+    };
+  }
   
-  document.getElementById('btn-refresh-debug')?.addEventListener('click', renderDebugVisible);
-  renderDebugVisible();
-}
-
-
-
-function isAdminEnabled(){
-  try {
-    const params = new URLSearchParams(location.search);
-    if(params.get('admin') === '1') return true;
-    return localStorage.getItem('admin') === '1';
-  } catch(e){ return false; }
-}
-function showAdminIfAny(){
-  const panel = document.getElementById('admin-panel');
-  if(panel) panel.style.display = isAdminEnabled() ? '' : 'none';
-}
-
-async function adminPurgeOutOfRange(){
-  const visibleIds = new Set(buildAllSlots().map(s=>s.id));
-  const entries = Object.entries(state.scheduleData);
-  for(const [slotId, occ] of entries){
-    if(visibleIds.has(slotId)) continue;
-    if(occ?.p1){ await apiSetSlot(slotId, 1, null, true); }
-    if(occ?.p2){ await apiSetSlot(slotId, 2, null, true); }
+  if (kpiIncomplete) {
+    kpiIncomplete.onclick = () => {
+      document.querySelector('[data-tab="tshirts"]')?.click();
+    };
   }
-  await loadState();
-  renderResume();
-}
-
-
-function renderDebugVisible(){
-  const cont = document.getElementById('debug-container');
-  if(!cont) return;
-  cont.innerHTML='';
-  const all = buildAllSlots();
-  let found = 0;
-  for(const s of all){
-    const occ = state.scheduleData[s.id];
-    if(!occ || (!occ.p1 && !occ.p2)) continue;
-    found++;
-    const row = document.createElement('div');
-    row.className='row';
-    row.style.justifyContent='space-between';
-    row.style.border='1px solid #e5e7eb';
-    row.style.borderRadius='10px';
-    row.style.padding='8px 10px';
-    row.innerHTML = `
-      <div class="row" style="gap:10px">
-        <span class="chip">${fmtLocal(s.start)}</span>
-        <span class="chip">p1: ${occ.p1||'—'}</span>
-        <span class="chip">p2: ${occ.p2||'—'}</span>
-      </div>
-      <div class="row" style="gap:6px">
-        ${occ.p1 ? `<button class="btn small ghost" data-remove="1" data-id="${s.id}">Retirer p1</button>`:''}
-        ${occ.p2 ? `<button class="btn small ghost" data-remove="2" data-id="${s.id}">Retirer p2</button>`:''}
-      </div>
-    `;
-    cont.appendChild(row);
-  }
-  if(found===0){
-    const empty = document.createElement('div');
-    empty.className='label';
-    empty.textContent='Aucune réservation dans cette plage.';
-    cont.appendChild(empty);
-  }
-
-  // Wire removal buttons
-  cont.querySelectorAll('[data-remove]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const pos = Number(btn.getAttribute('data-remove'));
-      const id = btn.getAttribute('data-id');
-      await apiSetSlot(id, pos, null, true);
-      await loadState();
-      renderResume();
-    });
-  });
-}
-
-
-function saveSnapshot(){
-  try {
-    const snap = JSON.stringify(state);
-    localStorage.setItem('lionsclub_snapshot', snap);
-    alert('État sauvegardé localement ✅');
-  } catch(e){ alert('Impossible de sauvegarder : ' + e.message); }
-}
-async function restoreSnapshot(){
-  try {
-    const snap = localStorage.getItem('lionsclub_snapshot');
-    if(!snap){ alert('Aucun snapshot trouvé'); return; }
-    const data = JSON.parse(snap);
-    // Replay minimal operations to restore scheduleData (visible range + outside)
-    // We clear all existing reservations first in both ranges
-    const allVisible = new Set(buildAllSlots().map(s=>s.id));
-    // Clear everything we currently have
-    for (const [slotId, occ] of Object.entries(state.scheduleData||{})){
-      if(occ?.p1) await apiSetSlot(slotId,1,null,true);
-      if(occ?.p2) await apiSetSlot(slotId,2,null,true);
-    }
-    // Restore from snapshot
-    for (const [slotId, occ] of Object.entries(data.scheduleData||{})){
-      if(occ?.p1) await apiSetSlot(slotId,1,occ.p1,false);
-      if(occ?.p2) await apiSetSlot(slotId,2,occ.p2,false);
-    }
-    // Restore tshirts
-    for (const [name,size] of Object.entries(data.tshirtData||{})){
-      if(size) await apiSetTshirt(name,size);
-    }
-    await loadState();
-    renderResume();
-    alert('État restauré ✅');
-  } catch(e){ alert('Restauration impossible : ' + e.message); }
-}
-
-async function adminClearVisible(){
-  const ids = buildAllSlots().map(s=>s.id);
-  for(const slotId of ids){
-    const occ = state.scheduleData[slotId];
-    if(!occ) continue;
-    if(occ?.p1){ await apiSetSlot(slotId, 1, null, true); }
-    if(occ?.p2){ await apiSetSlot(slotId, 2, null, true); }
-  }
-  await loadState();
-  renderResume();
 }
 
 /** ========= INIT ========= */
