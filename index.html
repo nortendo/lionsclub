@@ -94,8 +94,7 @@
 /** ========= CONFIG / HELPERS ========= */
 const MEMBERS = [
   "Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V",
-  "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela",
-  "Mario D","Veronique L","Sandy L"
+  "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"
 ];
 
 // slots 30 min: sam 15:00 -> dim 15:00
@@ -190,7 +189,19 @@ function renderTshirts(){
     <div class="grid">${rows}</div>
   `;
 
-  // auto-save + freeze
+  
+
+  // Admin panel visibility & bindings
+  const adminPanel = document.getElementById('admin-panel');
+  if(adminPanel){ adminPanel.style.display = isAdminEnabled() ? '' : 'none'; }
+  document.getElementById('btn-purge-out')?.addEventListener('click', ()=>{
+    if(confirm('Confirmer la purge des créneaux hors plage ?')) adminPurgeOutOfRange();
+  });
+  document.getElementById('btn-clear-visible')?.addEventListener('click', ()=>{
+    if(confirm('Remettre à zéro tous les créneaux visibles ?')) adminClearVisible();
+  });
+
+// auto-save + freeze
   content.querySelectorAll('select[data-name]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
       const name = sel.dataset.name;
@@ -388,6 +399,21 @@ function renderResume(){
     <div class="kpis">
       <div class="kpi link" id="kpi-incomplete" title="Aller aux détails">
         <div class="row"><span class="pill">À compléter</span></div>
+    <div id="admin-panel" style="display:none">
+      <div class="card" style="border:1px dashed #e2e8f0;background:#fafafa;margin-top:12px">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="label">Outils admin (maintenance)</div>
+          <div class="row" style="gap:8px">
+            <button class="btn small ghost" id="btn-purge-out">Purger hors plage</button>
+            <button class="btn small ghost" id="btn-clear-visible">Vider créneaux visibles</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <span class="muted">« Purger hors plage » supprime les réservations qui ne sont pas dans la fenêtre visible. « Vider créneaux visibles » remet à zéro la fenêtre visible.</span>
+        </div>
+      </div>
+    </div>
+
         <div class="v">${noShirtNoSlot}</div>
         <div class="muted">sans T-shirt & ni créneau</div>
       </div>
@@ -452,6 +478,35 @@ function renderResume(){
       document.querySelector('[data-tab="tshirts"]')?.click();
     };
   }
+}
+
+
+function isAdminEnabled(){
+  try{
+    const p = new URLSearchParams(location.search);
+    if(p.get('admin')==='1') return true;
+    return localStorage.getItem('admin')==='1';
+  }catch(e){ return false; }
+}
+async function adminPurgeOutOfRange(){
+  const visibleIds = new Set(buildAllSlots().map(s=>s.id));
+  const entries = Object.entries(state.scheduleData||{});
+  for(const [slotId, occ] of entries){
+    if(visibleIds.has(slotId)) continue;
+    if(occ?.p1) await apiSetSlot(slotId,1,null,true);
+    if(occ?.p2) await apiSetSlot(slotId,2,null,true);
+  }
+  await loadState(); renderResume();
+}
+async function adminClearVisible(){
+  const ids = buildAllSlots().map(s=>s.id);
+  for(const slotId of ids){
+    const occ = state.scheduleData[slotId];
+    if(!occ) continue;
+    if(occ?.p1) await apiSetSlot(slotId,1,null,true);
+    if(occ?.p2) await apiSetSlot(slotId,2,null,true);
+  }
+  await loadState(); renderResume();
 }
 
 /** ========= INIT ========= */
