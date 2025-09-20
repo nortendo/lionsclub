@@ -128,6 +128,17 @@ async function apiSetSlot(slotId,pos,name,remove=false){
 // state in memory
 let state = { tshirtData:{}, scheduleData:{}, members:[] };
 
+// Union MEMBERS + state.members (ordre: MEMBERS puis ajouts backend), sans doublons
+function allMembers(){
+  const a = Array.isArray(MEMBERS)? MEMBERS : [];
+  const b = Array.isArray(state.members)? state.members : [];
+  const seen = new Set();
+  const out = [];
+  for(const n of [...a, ...b]){ if(n && !seen.has(n)){ seen.add(n); out.push(n); } }
+  return out;
+}
+
+
 // tabs
 const content = document.getElementById('content');
 document.querySelectorAll('.tab').forEach(btn=>{
@@ -151,7 +162,7 @@ function showTab(key){
 /** ========= RENDER: T-SHIRTS ========= */
 function renderTshirts(){
   const sizes = ['XS','S','M','L','XL','XXL'];
-  const rows = MEMBERS.map(name=>{
+  const rows = allMembers().map(name=>{
     const val = state.tshirtData[name] || '';
     const hasSize = val && val !== '';
     const opts = ['<option value="">-- Choisir une taille --</option>']
@@ -331,11 +342,19 @@ function renderPlanning(){
 /** ========= RENDER: RESUME ========= */
 function computeKpis(){
   const tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
-  const taken = Object.values(state.scheduleData).reduce((acc, s)=> acc + (s?.p1?1:0) + (s?.p2?1:0), 0);
-  const totalSlots = buildAllSlots().length * 2;
+  // Compter uniquement la plage visible
+  const visible = buildAllSlots();
+  let taken = 0;
+  for(const s of visible){
+    const occ = state.scheduleData[s.id];
+    if(!occ) continue;
+    if(occ.p1) taken += 1;
+    if(occ.p2) taken += 1;
+  }
+  const totalSlots = visible.length * 2;
   const available = totalSlots - taken;
 
-  const noShirtNoSlot = MEMBERS.filter(n=>{
+  const noShirtNoSlot = allMembers().filter(n=>{
     const hasT = !!state.tshirtData[n];
     const hasS = Object.values(state.scheduleData).some(s=>s?.p1===n || s?.p2===n);
     return !hasT && !hasS;
