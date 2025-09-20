@@ -115,7 +115,16 @@ function addMin(dt, min){ return new Date(dt.getTime()+min*60000); }
 // API helpers
 async function apiGet(){ const r=await fetch('/api/state-get'); return r.json(); }
 async function apiSetTshirt(name,size){
-  await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name, size})});
+  const r = await fetch('/api/state-set-tshirt', {
+    method:'POST', headers:{'content-type':'application/json'},
+    body: JSON.stringify({name, size})
+  });
+  if(!r.ok){
+    const t = await r.text().catch(()=> '');
+    console.error('apiSetTshirt failed', r.status, t);
+    throw new Error('apiSetTshirt '+r.status);
+  }
+  return r.json().catch(()=>({ok:true}));
 }
 async function apiSetSlot(slotId,pos,name,remove=false){
   await fetch('/api/state-set-slot',{method:'POST',headers:{'content-type':'application/json'},
@@ -175,16 +184,25 @@ function renderTshirts(){
     <div class="grid">${rows}</div>
   `;
 
-  // auto-save + freeze
+  // auto-save (freeze only on success)
   content.querySelectorAll('select[data-name]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
       const name = sel.dataset.name;
       const size = sel.value;
-      if(!size) return;
-      sel.disabled = true;
-      await apiSetTshirt(name, size);
-      await loadState();
-      renderTshirts();
+      if(!size) return; // don't send empty as a set
+      const prev = state.tshirtData?.[name] || '';
+      try{
+        await apiSetTshirt(name, size);
+        await loadState();
+        sel.disabled = true; // freeze only after success
+        console.log('Taille enregistrée pour', name, size);
+        renderTshirts();
+      }catch(e){
+        console.warn('Échec enregistrement pour', name, e?.message);
+        sel.value = prev; // rollback
+        sel.disabled = false;
+        alert('Impossible d\'enregistrer la taille (erreur serveur). Réessaie plus tard.');
+      }
     });
   });
   // clear
@@ -198,7 +216,7 @@ function renderTshirts(){
       
       try {
         console.log('Envoi requête de suppression pour:', name, 'avec size: null');
-        await apiSetTshirt(name, null);
+        await apiSetTshirt(name, '');
         console.log('Requête API réussie, rechargement de l\'état...');
         await loadState();
         console.log('État rechargé, re-render...');
