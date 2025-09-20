@@ -190,9 +190,23 @@ function renderTshirts(){
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const name = btn.dataset.clear;
-      await apiSetTshirt(name, null);
-      await loadState();
-      renderTshirts();
+      console.log('Tentative de suppression pour:', name);
+      try {
+        await apiSetTshirt(name, ''); // Essayer avec chaîne vide d'abord
+        await loadState();
+        console.log('État après suppression:', state.tshirtData);
+        renderTshirts();
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        // Essayer avec null si chaîne vide ne marche pas
+        try {
+          await apiSetTshirt(name, null);
+          await loadState();
+          renderTshirts();
+        } catch (error2) {
+          console.error('Erreur avec null aussi:', error2);
+        }
+      }
     });
   });
 }
