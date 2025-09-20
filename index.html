@@ -50,7 +50,7 @@
       width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:10px;background:#fff
     }
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 10px}
-    .kpi{
+    .kpi{cursor:default;
       border:1px solid #e2e8f0;border-radius:12px;padding:14px;background:#fff;min-height:86px;
       display:flex;flex-direction:column;gap:8px;justify-content:center
     }
@@ -176,7 +176,11 @@ function renderTshirts(){
   `;
 
   
-  // Admin buttons
+  
+  // KPI scroll bindings (robust)
+  document.getElementById('kpi-shirts')?.addEventListener('click', ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'}));
+  document.getElementById('kpi-taken')?.addEventListener('click', ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'}));
+// Admin buttons
   document.getElementById('btn-save-snap')?.addEventListener('click', saveSnapshot);
   document.getElementById('btn-restore-snap')?.addEventListener('click', ()=>{ if(confirm('Restaurer l\'état sauvegardé ? Cela écrasera les réservations actuelles.')) restoreSnapshot(); });
   document.getElementById('btn-purge-out')?.addEventListener('click', ()=>{ if(confirm('Confirmer la purge des créneaux hors plage ?')) adminPurgeOutOfRange(); });
@@ -404,12 +408,12 @@ function renderResume(){
 
       <div class="kpi link" id="kpi-shirts">
         <div class="row"><span class="pill">T-Shirts choisis</span></div>
-        <div class="v">${tshirtChosen}</div>
+        <div class="v"><a href="#section-shirts" style="text-decoration:underline; cursor:pointer;">${tshirtChosen}</a></div>
       </div>
 
       <div class="kpi link" id="kpi-taken">
         <div class="row"><span class="pill">Créneaux réservés</span></div>
-        <div class="v">${taken}</div>
+        <div class="v"><a href="#section-slots" style="text-decoration:underline; cursor:pointer;">${taken}</a></div>
       </div>
 
       <div class="kpi">
