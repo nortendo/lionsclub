@@ -308,7 +308,7 @@ function renderPlanning(){
   content.querySelectorAll('select.select[data-id]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
       const slotId = sel.dataset.id;
-      const pos = Number(sel.dataset.pos);
+      const pos = sel.dataset.pos === '1' ? 'p1' : 'p2'; // Convertir 1->p1, 2->p2
       const name = sel.value;
       if(!name) return;
       sel.disabled = true;
@@ -321,8 +321,9 @@ function renderPlanning(){
   content.querySelectorAll('[data-remove]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const slotId = btn.dataset.id;
-      const pos = Number(btn.dataset.pos);
-      await apiSetSlot(slotId, pos, null, true);
+      const pos = btn.dataset.pos; // pos est déjà "1" ou "2" dans le HTML
+      const properPos = pos === '1' ? 'p1' : 'p2'; // Convertir pour l'API
+      await apiSetSlot(slotId, properPos, null, true);
       await loadState();
       renderPlanning();
     });
