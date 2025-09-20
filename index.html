@@ -332,15 +332,18 @@ function renderPlanning(){
 
 /** ========= RENDER: RESUME ========= */
 function computeKpis(){
+  // Correction de la logique de calcul pour les KPI
+  const allMembers = state.members.length ? state.members : MEMBERS;
+  
   const tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
   const taken = Object.values(state.scheduleData).reduce((acc, s)=> acc + (s?.p1?1:0) + (s?.p2?1:0), 0);
-  const totalSlots = buildAllSlots().length * 2; // 2 places par créneau
+  const totalSlots = buildAllSlots().length * 2;
   const available = totalSlots - taken;
 
-  const noShirtNoSlot = MEMBERS.filter(n=>{
-    const hasT = !!state.tshirtData[n];
-    const hasS = Object.values(state.scheduleData).some(s=>s?.p1===n || s?.p2===n);
-    return !hasT && !hasS;
+  const noShirtNoSlot = allMembers.filter(n => {
+    const hasTshirt = !!state.tshirtData[n];
+    const hasSlot = Object.values(state.scheduleData).some(s => s?.p1 === n || s?.p2 === n);
+    return !hasTshirt && !hasSlot;
   }).length;
 
   return { tshirtChosen, taken, available, noShirtNoSlot };
