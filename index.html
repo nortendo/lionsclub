@@ -190,7 +190,7 @@ function renderTshirts(){
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const name = btn.dataset.clear;
-      await apiSetTshirt(name, '');
+      await apiSetTshirt(name, null);
       await loadState();
       renderTshirts();
     });
@@ -270,7 +270,7 @@ function renderPlanning(){
   }).join('');
 
   content.innerHTML = `
-    <h3 class="section-title">Réserver un créneau (jusqu’à 2 personnes / créneau)</h3>
+    <h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3>
     <p class="hint">Si un créneau a déjà 1 personne, une seconde peut se rajouter pour ne pas marcher seul·e.</p>
     <div class="grid">${rows}</div>
   `;
@@ -344,7 +344,7 @@ function renderResume(){
   }).filter(Boolean).join('') || '<span class="muted">—</span>';
 
   content.innerHTML = `
-    <h3 class="section-title">Résumé de l’organisation</h3>
+    <h3 class="section-title">Résumé de l'organisation</h3>
 
     <div class="kpis">
       <div class="kpi link" id="kpi-incomplete" title="Aller aux détails">
@@ -396,10 +396,6 @@ function renderResume(){
   document.getElementById('kpi-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
   document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'});
   document.getElementById('kpi-incomplete').onclick = ()=> document.querySelector('[data-tab="tshirts"]').click();
-
-  // inline “Voir détails …”
-  document.getElementById('anchor-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('anchor-slots').onclick  = ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'});
 }
 
 /** ========= INIT ========= */
