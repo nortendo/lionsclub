@@ -1,23 +1,26 @@
+// Lightweight /tmp-backed storage for Vercel Serverless (no external DB)
+const fs = require('fs');
+const path = require('path');
+const STATE_FILE = path.join('/tmp', 'state.json');
 
-const URL = process.env.UPSTASH_REDIS_REST_URL;
-const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
-if (!URL || !TOKEN) { throw new Error("Upstash env vars missing"); }
-const KEY = "state-json";
-async function upstash(cmd, ...args) {
-  const path = [URL, cmd, ...args].map(s => String(s)).join("/");
-  const res = await fetch(path, { headers: { Authorization: `Bearer ${TOKEN}` } });
-  if (!res.ok) { throw new Error(`Upstash ${cmd} failed: ${res.status}`); }
-  return res.json();
+function ensureShape(state){
+  if (!state || typeof state !== 'object') state = {};
+  if (!state.tshirtData || typeof state.tshirtData !== 'object') state.tshirtData = {};
+  if (!state.scheduleData || typeof state.scheduleData !== 'object') state.scheduleData = {};
+  return state;
 }
-async function getState() {
-  const data = await upstash("get", KEY);
-  if (data && data.result) {
-    try { return JSON.parse(data.result); } catch {}
+
+function getState(){
+  try {
+    const raw = fs.readFileSync(STATE_FILE, 'utf8');
+    return ensureShape(JSON.parse(raw));
+  } catch {
+    return ensureShape({});
   }
-  return { tshirtData:{}, scheduleData:{}, members:[] };
 }
-async function setState(state) {
-  const payload = JSON.stringify(state);
-  return upstash("set", KEY, encodeURIComponent(payload));
+
+function setState(state){
+  fs.writeFileSync(STATE_FILE, JSON.stringify(ensureShape(state), null, 2), 'utf8');
 }
-export { getState, setState };
+
+module.exports = { getState, setState, STATE_FILE };
