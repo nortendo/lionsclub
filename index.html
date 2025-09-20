@@ -190,40 +190,9 @@ function renderTshirts(){
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const name = btn.dataset.clear;
-      console.log('Tentative de suppression pour:', name);
-      
-      // Essayer différents formats pour la suppression
-      const formats = [
-        () => apiSetTshirt(name, null),                    // Format 1: null
-        () => apiSetTshirt(name, undefined),               // Format 2: undefined  
-        () => apiSetTshirt(name, ''),                      // Format 3: chaîne vide
-        () => fetch('/api/state-set-tshirt', {            // Format 4: avec remove=true
-          method: 'POST',
-          headers: {'content-type': 'application/json'},
-          body: JSON.stringify({name, remove: true})
-        }),
-        () => fetch('/api/state-remove-tshirt', {         // Format 5: endpoint différent
-          method: 'POST', 
-          headers: {'content-type': 'application/json'},
-          body: JSON.stringify({name})
-        })
-      ];
-      
-      for (let i = 0; i < formats.length; i++) {
-        try {
-          console.log(`Tentative format ${i + 1}...`);
-          await formats[i]();
-          await loadState();
-          console.log('Succès avec format', i + 1, '- État:', state.tshirtData);
-          renderTshirts();
-          return; // Sortir dès que ça marche
-        } catch (error) {
-          console.error(`Format ${i + 1} échoué:`, error);
-        }
-      }
-      
-      console.error('Tous les formats ont échoué');
-      alert('Impossible de retirer la taille. Vérifiez la console pour les détails.');
+      await apiSetTshirt(name, null);
+      await loadState();
+      renderTshirts();
     });
   });
 }
