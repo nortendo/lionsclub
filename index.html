@@ -184,59 +184,44 @@ function renderTshirts(){
     <div class="grid">${rows}</div>
   `;
 
-  // auto-save (freeze only on success)
-  content.querySelectorAll('select[data-name]').forEach(sel=>{
-    sel.addEventListener('change', async ()=>{
-      const name = sel.dataset.name;
-      const size = sel.value;
-      if(!size) return; // don't send empty as a set
-      const prev = state.tshirtData?.[name] || '';
-      try{
-        await apiSetTshirt(name, size);
-        await loadState();
-        sel.disabled = true; // freeze only after success
-        console.log('Taille enregistrée pour', name, size);
-        renderTshirts();
-      }catch(e){
-        console.warn('Échec enregistrement pour', name, e?.message);
-        sel.value = prev; // rollback
-        sel.disabled = false;
-        alert('Impossible d\'enregistrer la taille (erreur serveur). Réessaie plus tard.');
-      }
-    });
+  // auto-save (reload & freeze on success)
+content.querySelectorAll('select[data-name]').forEach(sel=>{
+  sel.addEventListener('change', async ()=>{
+    const name = sel.dataset.name;
+    const size = sel.value;
+    const prev = state.tshirtData?.[name] || '';
+    if(!size) return;
+    try{
+      await apiSetTshirt(name, size);
+      await loadState();
+      sel.disabled = true;
+      renderTshirts();
+    }catch(e){
+      sel.value = prev; sel.disabled = false; alert("Impossible d'enregistrer (API)");
+    }
   });
+});
   // clear
-  content.querySelectorAll('[data-clear]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      if (btn.disabled) return;
-      const name = btn.dataset.clear;
-      const sel = content.querySelector(`select[data-name="${name}"]`);
-      const prev = state.tshirtData?.[name] || '';
-      btn.disabled = true; btn.textContent='Suppression...';
-
-      // UI clear so user can rechoisir directement
-      if (sel){ sel.disabled = false; sel.value=''; sel.focus(); }
-      if (state.tshirtData) state.tshirtData[name] = '';
-
-      try {
-        const r = await fetch('/api/state-set-tshirt', {
-          method:'POST', headers:{'content-type':'application/json'},
-          body: JSON.stringify({ name, remove:true })
-        });
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        await r.json().catch(()=>({}));
-        await loadState();
-        renderTshirts();
-      } catch(e){
-        // rollback UI/state on failure
-        if (sel){ sel.value = prev; }
-        if (state.tshirtData) state.tshirtData[name] = prev;
-        alert("Impossible de retirer la taille (erreur serveur).");
-      } finally {
-        btn.disabled = false; btn.textContent = 'Retirer';
-      }
-    });
+content.querySelectorAll('[data-clear]').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    if (btn.disabled) return;
+    const name = btn.dataset.clear;
+    const sel = content.querySelector(`select[data-name="${name}"]`);
+    const prev = state.tshirtData?.[name] || '';
+    btn.disabled = true; btn.textContent='Suppression...';
+    try{
+      const r = await fetch('/api/state-set-tshirt', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ name, remove:true })});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      await r.json().catch(()=>({}));
+      await loadState();
+      renderTshirts();
+    }catch(e){
+      if (sel){ sel.value = prev; }
+      if (state.tshirtData) state.tshirtData[name] = prev;
+      alert('Impossible de retirer (API)');
+    } finally { btn.disabled = false; btn.textContent='Retirer'; }
   });
+});
 }
 
 /** ========= RENDER: PLANNING ========= */
@@ -448,3 +433,38 @@ function renderResume(){
 </script>
 </body>
 </html>
+// Bind delegated listeners for planning once
+(function(){
+  if (document.body._bindPlanningDelegated) return;
+  document.body._bindPlanningDelegated = true;
+  document.body.addEventListener('change', async (e)=>{
+    const sel = e.target.closest('select[data-slot][data-pos]');
+    if(!sel) return;
+    const slotId = sel.dataset.slot;
+    const posIndex = sel.dataset.pos; // '0' or '1'
+    const pos = (String(posIndex)==='0')?'p1':'p2';
+    const name = sel.value;
+    const prev = sel.getAttribute('data-prev') || '';
+    if(!name) return;
+    sel.disabled = true;
+    try{
+      await apiSetSlot(slotId, pos, name, false);
+      await loadState();
+      renderPlanning();
+    }catch(err){
+      sel.disabled = false; sel.value = prev; alert('Impossible d\'enregistrer le créneau');
+    }
+  });
+  document.body.addEventListener('click', async (e)=>{
+    const btn = e.target.closest('[data-unset-slot]');
+    if(!btn) return;
+    const slotId = btn.dataset.slot; const pos = btn.dataset.pos; // p1/p2
+    const sel = document.querySelector(`select[data-slot="${slotId}"][data-pos="${pos==='p1'?'0':'1'}"]`);
+    btn.disabled = true;
+    try{
+      await apiSetSlot(slotId, pos, '', true);
+      await loadState();
+      renderPlanning();
+    }catch(err){ btn.disabled = false; alert('Impossible de retirer le créneau'); }
+  });
+})();
