@@ -62,29 +62,7 @@
   <script>
   const MEMBERS=["Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V","Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"];
   const SIZES=["XS","S","M","L","XL","XXL"];
-  // Build the official slot list (drives order everywhere)
-function buildSlots(){
-  const out = [];
-  function pushRange(dateStr, start, end){
-    const [sh, sm] = start.split(':').map(Number);
-    const [eh, em] = end.split(':').map(Number);
-    let d = new Date(dateStr+'T'+String(sh).padStart(2,'0')+':'+String(sm).padStart(2,'0')+':00');
-    const stop = new Date(dateStr+'T'+String(eh).padStart(2,'0')+':'+String(em).padStart(2,'0')+':00');
-    while(d < stop){
-      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0');
-      const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0');
-      out.push(`slot-${y}-${m}-${da}-${hh}:${mm}`);
-      d = new Date(d.getTime()+30*60*1000);
-    }
-  }
-  // Samedi 11/10/2025 : 15:00 -> 23:00 (dernier départ 22:30)
-  pushRange('2025-10-11','15:00','23:00');
-  // Dimanche 12/10/2025 : 09:00 -> 15:00 (dernier départ 14:30)
-  pushRange('2025-10-12','09:00','15:00');
-  return out;
-}
-const SLOTS = buildSlots();
-
+  const SLOTS=["slot-2025-10-11-15:00","slot-2025-10-11-15:30","slot-2025-10-11-16:00","slot-2025-10-11-16:30","slot-2025-10-11-17:00","slot-2025-10-11-17:30","slot-2025-10-11-18:00","slot-2025-10-11-18:30","slot-2025-10-11-19:00","slot-2025-10-11-19:30","slot-2025-10-11-20:00","slot-2025-10-11-20:30","slot-2025-10-11-21:00","slot-2025-10-11-21:30","slot-2025-10-11-22:00","slot-2025-10-11-22:30","slot-2025-10-12-09:00","slot-2025-10-12-09:30","slot-2025-10-12-10:00","slot-2025-10-12-10:30"];
   const state={tshirtData:{},scheduleData:{}};
   async function apiGet(){const r=await fetch('/api/state-get');if(!r.ok)throw new Error('GET '+r.status);return r.json();}
   async function apiSetTshirt(name,size){const r=await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,size})});if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('apiSetTshirt '+r.status+' '+t)}return r.json().catch(()=>({ok:true}));}
@@ -92,48 +70,76 @@ const SLOTS = buildSlots();
   async function loadState(){const s=await apiGet();state.tshirtData=s.tshirtData||{};state.scheduleData=s.scheduleData||{};}
   function setActiveTab(tab){document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));if(tab==='tshirts')renderTshirts();else if(tab==='planning')renderPlanning();else renderResume();}
   function renderTshirts(){const c=document.getElementById('content');let rows='';for(const name of MEMBERS){const size=state.tshirtData[name]||'';const frozen=!!size;const options=['<option value="">-- Choisir une taille --</option>'].concat(SIZES.map(s=>`<option value="${s}" ${s===size?'selected':''}>${s}</option>`)).join('');rows+=`<div class="slot"><div class="row" style="justify-content:space-between"><div class="slot-title">${name}</div>${size?`<span class="pill">${size}</span> <button class="btn small danger" data-clear="${name}">Retirer</button>`:''}</div><div class="row"><select data-name="${name}" ${frozen?'disabled':''}>${options}</select></div><div class="hint">La taille se sauvegarde automatiquement et se fige.</div></div>`;}c.innerHTML=`<h3 class="section-title">Sélection des tailles de t-shirts</h3><div class="grid">${rows}</div>`;c.querySelectorAll('select[data-name]').forEach(sel=>{sel.addEventListener('change',async()=>{const name=sel.dataset.name;const size=sel.value;const prev=state.tshirtData?.[name]||'';if(!size)return;try{await apiSetTshirt(name,size);await loadState();sel.disabled=true;renderTshirts();}catch(e){sel.value=prev;sel.disabled=false;alert("Impossible d'enregistrer (API)\n"+e.message);}})});c.querySelectorAll('[data-clear]').forEach(btn=>{btn.addEventListener('click',async()=>{if(btn.disabled)return;const name=btn.dataset.clear;const sel=c.querySelector(`select[data-name="${name}"]`);const prev=state.tshirtData?.[name]||'';btn.disabled=true;btn.textContent='Suppression...';try{const r=await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,remove:true})});if(!r.ok)throw new Error('HTTP '+r.status+' '+await r.text());await r.json().catch(()=>({}));await loadState();renderTshirts();}catch(e){if(sel){sel.value=prev;}if(state.tshirtData)state.tshirtData[name]=prev;alert('Impossible de retirer (API)\n'+e.message);}finally{btn.disabled=false;btn.textContent='Retirer';}})});}
-  function renderPlanning(){const c=document.getElementById('content');let rows='';for(const slotId of SLOTS){const slot=state.scheduleData[slotId]||{p1:null,p2:null};const occ=[slot.p1,slot.p2].filter(Boolean).join(', ')||'—';const options=['<option value="">-- Choisir un --</option>'].concat(MEMBERS.map(n=>`<option value="${n}">${n}</option>`)).join('');rows+=`<div class="slot"><div class="slot-title">${slotId.replace('slot-','').replace('T',' ')}</div><div class="slot-occupied">Occupé: ${occ}</div><div class="row"><div style="flex:1"><div class="hint">Personne 1</div><select data-slot="${slotId}" data-pos="0">${options}</select>${slot.p1?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p1">Retirer p1</button>`:''}</div><div style="flex:1"><div class="hint">Personne 2</div><select data-slot="${slotId}" data-pos="1">${options}</select>${slot.p2?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p2">Retirer p2</button>`:''}</div></div><div class="slot-cap">${2-(slot.p1?1:0)-(slot.p2?1:0)} place(s) restante(s)</div></div>`;}c.innerHTML=`<h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3><div class="grid">${rows}</div>`;c.querySelectorAll('select[data-slot][data-pos]').forEach(sel=>{sel.addEventListener('change',async()=>{const slotId=sel.dataset.slot;const pos=(String(sel.dataset.pos)==='0')?'p1':'p2';const name=sel.value;if(!name)return;sel.disabled=true;try{await apiSetSlot(slotId,pos,name,false);await loadState();renderPlanning();}catch(err){sel.disabled=false;alert("Impossible d'enregistrer le créneau\n"+err.message);}})});c.querySelectorAll('[data-unset-slot]').forEach(btn=>{btn.addEventListener('click',async()=>{if(btn.disabled)return;const slotId=btn.dataset.slot;const pos=btn.dataset.pos;btn.disabled=true;try{await apiSetSlot(slotId,pos,'',true);await loadState();renderPlanning();}catch(err){btn.disabled=false;alert("Impossible de retirer le créneau\n"+err.message);}})});}
-  function renderResume(){
+  function renderPlanning(){
   const c=document.getElementById('content');
-  const tshChosen = Object.entries(state.tshirtData||{})
-    .filter(([n,s])=>!!s)
-    .sort((a,b)=>a[0].localeCompare(b[0]))
-    .map(([n,s])=>`<li>${n}: ${s}</li>`)
-    .join('') || '<li>Aucune taille enregistrée pour le moment.</li>';
-
-  const groups = {};
-  for(const id of SLOTS){
-    const s = state.scheduleData[id] || {p1:null,p2:null};
-    const names = [s.p1,s.p2].filter(Boolean);
-    if(names.length===0) continue;
-    const label = id.replace('slot-','');
-    const parts = label.split('-');
-    const day = parts.slice(0,3).join('-');
-    const time = parts.slice(3).join('-');
-    if(!groups[day]) groups[day]=[];
-    groups[day].push({time, names:names.join(', ')});
-  }
-  const dayOrder = ['2025-10-11','2025-10-12'];
-  const pl = dayOrder.map(day=>{
-    const items = (groups[day]||[]).sort((a,b)=>a.time.localeCompare(b.time))
-      .map(it=>`<li>${day} • ${it.time}: ${it.names}</li>`).join('');
-    if(!items) return '';
-    return `<h4 style="margin-top:8px">${day}</h4><ul>${items}</ul>`;
-  }).join('') || '<p>Aucun créneau réservé pour l’instant.</p>';
-
-  c.innerHTML=`<h3 class="section-title">Résumé</h3>
-    <div class="grid">
-      <div>
-        <h4>T-Shirts</h4>
-        <ul>${tshChosen}</ul>
+  let rows='';
+  for(const slotId of SLOTS){
+    const slot=state.scheduleData[slotId]||{p1:null,p2:null};
+    const occ=[slot.p1,slot.p2].filter(Boolean).join(', ')||'—';
+    const cap=2-(slot.p1?1:0)-(slot.p2?1:0);
+    const isFull = cap===0;
+    const options = (selected)=> ['<option value="">-- Choisir un --</option>']
+        .concat(MEMBERS.map(n=>`<option value="${n}" ${n===selected?'selected':''}>${n}</option>`))
+        .join('');
+    const dis1 = slot.p1 ? 'disabled' : (isFull ? 'disabled' : '');
+    const dis2 = slot.p2 ? 'disabled' : (isFull ? 'disabled' : '');
+    rows+=`<div class="slot">
+      <div class="slot-title">${slotId.replace('slot-','').replace('T',' ')}</div>
+      <div class="slot-occupied">Occupé: ${occ}</div>
+      <div class="row">
+        <div style="flex:1">
+          <div class="hint">Personne 1</div>
+          <select data-slot="${slotId}" data-pos="0" ${dis1}>${options(slot.p1||'')}</select>
+          ${slot.p1?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p1">Retirer p1</button>`:''}
+        </div>
+        <div style="flex:1">
+          <div class="hint">Personne 2</div>
+          <select data-slot="${slotId}" data-pos="1" ${dis2}>${options(slot.p2||'')}</select>
+          ${slot.p2?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p2">Retirer p2</button>`:''}
+        </div>
       </div>
-      <div>
-        <h4>Planning</h4>
-        ${pl}
-      </div>
+      <div class="slot-cap">${cap} place(s) restante(s)</div>
     </div>`;
+  }
+  c.innerHTML=`<h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3><div class="grid">${rows}</div>`;
+  c.querySelectorAll('select[data-slot][data-pos]').forEach(sel=>{
+    sel.addEventListener('change',async()=>{
+      const slotId=sel.dataset.slot;
+      const pos=(String(sel.dataset.pos)==='0')?'p1':'p2';
+      const name=sel.value;
+      if(!name)return;
+      sel.disabled=true;
+      try{
+        await apiSetSlot(slotId,pos,name,false);
+        await loadState();
+        renderPlanning();
+      }catch(err){
+        sel.disabled=false;
+        alert("Impossible d'enregistrer le créneau
+"+err.message);
+      }
+    });
+  });
+  c.querySelectorAll('[data-unset-slot]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      if(btn.disabled)return;
+      const slotId=btn.dataset.slot;
+      const pos=btn.dataset.pos;
+      btn.disabled=true;
+      try{
+        await apiSetSlot(slotId,pos,'',true);
+        await loadState();
+        renderPlanning();
+      }catch(err){
+        btn.disabled=false;
+        alert("Impossible de retirer le créneau
+"+err.message);
+      }
+    });
+  });
 }
 
+  function renderResume(){const c=document.getElementById('content');const tsh=MEMBERS.map(n=>`<li>${n}: ${state.tshirtData[n]||'—'}</li>`).join('');const pl=Object.entries(state.scheduleData).map(([id,s])=>`<li>${id.replace('slot-','')}: ${[s.p1,s.p2].filter(Boolean).join(', ')||'—'}</li>`).join('');c.innerHTML=`<h3 class="section-title">Résumé</h3><div class="grid"><div><h4>T-Shirts</h4><ul>${tsh}</ul></div><div><h4>Planning</h4><ul>${pl}</ul></div></div>`;}
   document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>setActiveTab(tab.dataset.tab));});
   (async()=>{await loadState();setActiveTab('tshirts');})();
   window.setActiveTab=setActiveTab;window.renderTshirts=renderTshirts;window.renderPlanning=renderPlanning;window.renderResume=renderResume;window.state=state;
