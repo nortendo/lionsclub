@@ -175,7 +175,11 @@ function renderTshirts(){
     <div class="grid">${rows}</div>
   `;
 
-  // auto-save + freeze
+  
+  // Admin buttons
+  document.getElementById('btn-purge-out')?.addEventListener('click', adminPurgeOutOfRange);
+  document.getElementById('btn-clear-visible')?.addEventListener('click', adminClearVisible);
+// auto-save + freeze
   content.querySelectorAll('select[data-name]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
       const name = sel.dataset.name;
@@ -333,30 +337,28 @@ function renderPlanning(){
 /** ========= RENDER: RESUME ========= */
 function computeKpis(){
   const allMembers = state.members.length ? state.members : MEMBERS;
-  
-  // 1. Initialiser les compteurs à 0 à chaque appel pour éviter les régressions
-  let tshirtChosen = 0;
-  let taken = 0;
-  let available = 0;
-  let noShirtNoSlot = 0;
-  
-  // 2. Compter le nombre de T-shirts déjà choisis en filtrant les valeurs non vides
-  tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
-  
-  // 3. Compter les créneaux déjà réservés
-  taken = Object.values(state.scheduleData).reduce((acc, s)=> acc + (s?.p1?1:0) + (s?.p2?1:0), 0);
-  
-  // 4. Calcule le nombre total de places disponibles
-  const totalSlots = buildAllSlots().length * 2;
-  available = totalSlots - taken;
+  const slots = buildAllSlots();
 
-  // 5. Calcule les personnes à compléter en parcourant TOUS les membres
-  noShirtNoSlot = allMembers.filter(n => {
+  let tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
+
+  // Compter uniquement les réservations dans les slots visibles
+  let taken = slots.reduce((acc,s)=>{
+    const occ = state.scheduleData[s.id]||{};
+    return acc + (occ.p1?1:0) + (occ.p2?1:0);
+  },0);
+
+  const totalSlots = slots.length * 2;
+  let available = totalSlots - taken;
+
+  let noShirtNoSlot = allMembers.filter(n => {
     const hasTshirt = !!state.tshirtData[n];
-    const hasSlot = Object.values(state.scheduleData).some(s => s?.p1 === n || s?.p2 === n);
+    const hasSlot = slots.some(s => {
+      const occ = state.scheduleData[s.id]||{};
+      return occ.p1===n || occ.p2===n;
+    });
     return !hasTshirt && !hasSlot;
   }).length;
-  
+
   return { tshirtChosen, taken, available, noShirtNoSlot };
 }
 
@@ -411,6 +413,17 @@ function renderResume(){
         <div class="row"><span class="pill" style="background:#ecfdf3;color:#065f46">Créneaux dispo</span></div>
         <div class="v">${available}</div>
       </div>
+    <div class="card" style="border:1px dashed #e2e8f0;background:#fafafa;margin-top:12px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="label">Outils admin (maintenance)</div>
+        <div class="row" style="gap:8px">
+          <button class="btn small ghost" id="btn-purge-out">Purger hors plage</button>
+          <button class="btn small ghost" id="btn-clear-visible">Vider créneaux visibles</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <span class="muted">« Purger hors plage » supprime les réservations qui ne sont pas dans la fenêtre sam 15:00 → dim 15:00. « Vider créneaux visibles » remet à zéro la fenêtre visible.</span>
+      </div>
     </div>
 
     <div class="row" style="gap:16px;margin:8px 0 2px">
@@ -438,8 +451,33 @@ function renderResume(){
 
   // KPI anchors
   document.getElementById('kpi-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'});
+  document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollsIntoView({behavior:'smooth'});
   document.getElementById('kpi-incomplete').onclick = ()=> document.querySelector('[data-tab="tshirts"]').click();
+}
+
+
+async function adminPurgeOutOfRange(){
+  const visibleIds = new Set(buildAllSlots().map(s=>s.id));
+  const entries = Object.entries(state.scheduleData);
+  for(const [slotId, occ] of entries){
+    if(visibleIds.has(slotId)) continue;
+    if(occ?.p1){ await apiSetSlot(slotId, 1, null, true); }
+    if(occ?.p2){ await apiSetSlot(slotId, 2, null, true); }
+  }
+  await loadState();
+  renderResume();
+}
+
+async function adminClearVisible(){
+  const ids = buildAllSlots().map(s=>s.id);
+  for(const slotId of ids){
+    const occ = state.scheduleData[slotId];
+    if(!occ) continue;
+    if(occ?.p1){ await apiSetSlot(slotId, 1, null, true); }
+    if(occ?.p2){ await apiSetSlot(slotId, 2, null, true); }
+  }
+  await loadState();
+  renderResume();
 }
 
 /** ========= INIT ========= */
