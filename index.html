@@ -94,7 +94,8 @@
 /** ========= CONFIG / HELPERS ========= */
 const MEMBERS = [
   "Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V",
-  "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"
+  "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela",
+  "Mario D","Veronique L","Sandy L"
 ];
 
 // slots 30 min: sam 15:00 -> dim 15:00
@@ -128,44 +129,13 @@ async function apiSetSlot(slotId,pos,name,remove=false){
 // state in memory
 let state = { tshirtData:{}, scheduleData:{}, members:[] };
 
-// === Name normalization helpers ===
-function _norm(s){
-  try{
-    return (s||'')
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // strip accents
-      .toLowerCase()
-      .replace(/\s+/g,' ') // collapse spaces
-      .trim();
-  }catch(e){ return (s||'').toLowerCase().trim(); }
-}
-
-// Union MEMBERS + state.members using normalized keys (no duplicates, tolerant to accents/extra spaces)
-function allMembers(){
-  const base = Array.isArray(MEMBERS)? MEMBERS : [];
-  const api  = Array.isArray(state.members)? state.members : [];
-  const seen = new Set();
-  const out  = [];
-  for(const n of [...base, ...api]){
-    if(!n) continue;
-    const k = _norm(n);
-    if(!k || seen.has(k)) continue;
-    seen.add(k); out.push(n);
-  }
-  return out;
-}
-
-// Ensure critical people are present even if backend is missing them (tolerant to accents)
-const MUST_HAVE = ["Mario D","Veronique L","Sandy L"];
-function ensureMustHave(list){
-  const seen = new Set(list.map(_norm));
-  for(const n of MUST_HAVE){
-    if(!seen.has(_norm(n))) list.push(n);
-  }
-  return list;
-}
-
-
 // Union MEMBERS + state.members (ordre: MEMBERS puis ajouts backend), sans doublons
+function allMembers(){
+  const a = Array.isArray(MEMBERS)? MEMBERS : [];
+  const b = Array.isArray(state.members)? state.members : [];
+  const seen = new Set();
+  const out = [];
+  for(const n of [...a, ...b]){ if(n && !seen.has(n)){ seen.add(n); out.push(n); } }
   return out;
 }
 
@@ -181,12 +151,8 @@ document.querySelectorAll('.tab').forEach(btn=>{
 });
 
 async function loadState(){
-
   const data = await apiGet();
-  state = { tshirtData:data.tshirtData||{
-  state.members = ensureMustHave(allMembers());
-}
-, scheduleData:data.scheduleData||{}, members: data.members?.length? data.members: MEMBERS };
+  state = { tshirtData:data.tshirtData||{}, scheduleData:data.scheduleData||{}, members: data.members?.length? data.members: MEMBERS };
 }
 function showTab(key){
   if(key==='tshirts') renderTshirts();
@@ -394,7 +360,7 @@ function renderResume(){
   const { tshirtChosen, taken, available, noShirtNoSlot } = computeKpis();
 
   // détails t-shirts
-  const rows = ensureMustHave(allMembers())
+  const rows = MEMBERS
     .filter(n=> state.tshirtData[n])
     .map(n=> `<tr><td>${n}</td><td>${state.tshirtData[n]}</td></tr>`).join('') || `<tr><td colspan="2" class="muted">—</td></tr>`;
 
@@ -486,23 +452,6 @@ function renderResume(){
       document.querySelector('[data-tab="tshirts"]')?.click();
     };
   }
-}
-
-
-function debugMissing(){
-  try{
-    const qs = new URLSearchParams(location.search);
-    if(qs.get('debug')!=='missing') return;
-    const union = ensureMustHave(allMembers());
-    const nset = new Set(union.map(_norm));
-    const missing = ["Mario D","Veronique L","Sandy L"].filter(n=>!nset.has(_norm(n)));
-    const box = document.createElement('div');
-    box.style.position='fixed'; box.style.right='12px'; box.style.bottom='12px';
-    box.style.background='#111827'; box.style.color='#fff'; box.style.padding='8px 10px';
-    box.style.borderRadius='10px'; box.style.fontSize='12px'; box.style.zIndex='9999';
-    box.textContent = `Missing: ${missing.join(', ') || 'none'} | union=${union.length}`;
-    document.body.appendChild(box);
-  }catch(e){}
 }
 
 /** ========= INIT ========= */
