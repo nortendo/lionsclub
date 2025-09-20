@@ -13,7 +13,12 @@
       --pill:#eef2ff;--pillText:#4338ca;--chip:#f1f5f9;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2)) fixed;color:var(--text)}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      background:linear-gradient(135deg,var(--bg1),var(--bg2)) fixed;
+      color:var(--text)
+    }
     .container{max-width:1100px;margin:32px auto;padding:0 16px}
     .card{background:var(--card);border-radius:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);padding:20px}
     .header{padding:24px 20px 12px;color:#fff;background:transparent}
@@ -60,21 +65,216 @@
   </div>
 
   <script>
-  const MEMBERS=["Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V","Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"];
-  const SIZES=["XS","S","M","L","XL","XXL"];
-  const SLOTS=["slot-2025-10-11-15:00","slot-2025-10-11-15:30","slot-2025-10-11-16:00","slot-2025-10-11-16:30","slot-2025-10-11-17:00","slot-2025-10-11-17:30","slot-2025-10-11-18:00","slot-2025-10-11-18:30","slot-2025-10-11-19:00","slot-2025-10-11-19:30","slot-2025-10-11-20:00","slot-2025-10-11-20:30","slot-2025-10-11-21:00","slot-2025-10-11-21:30","slot-2025-10-11-22:00","slot-2025-10-11-22:30","slot-2025-10-12-09:00","slot-2025-10-12-09:30","slot-2025-10-12-10:00","slot-2025-10-12-10:30"];
-  const state={tshirtData:{},scheduleData:{}};
-  async function apiGet(){const r=await fetch('/api/state-get');if(!r.ok)throw new Error('GET '+r.status);return r.json();}
-  async function apiSetTshirt(name,size){const r=await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,size})});if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('apiSetTshirt '+r.status+' '+t)}return r.json().catch(()=>({ok:true}));}
-  async function apiSetSlot(slotId,pos,name,remove=false){const payload=remove?{slotId,pos,remove:true}:{slotId,pos,name};const r=await fetch('/api/state-set-slot',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('apiSetSlot '+r.status+' '+t)}return r.json().catch(()=>({ok:true}));}
-  async function loadState(){const s=await apiGet();state.tshirtData=s.tshirtData||{};state.scheduleData=s.scheduleData||{};}
-  function setActiveTab(tab){document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));if(tab==='tshirts')renderTshirts();else if(tab==='planning')renderPlanning();else renderResume();}
-  function renderTshirts(){const c=document.getElementById('content');let rows='';for(const name of MEMBERS){const size=state.tshirtData[name]||'';const frozen=!!size;const options=['<option value="">-- Choisir une taille --</option>'].concat(SIZES.map(s=>`<option value="${s}" ${s===size?'selected':''}>${s}</option>`)).join('');rows+=`<div class="slot"><div class="row" style="justify-content:space-between"><div class="slot-title">${name}</div>${size?`<span class="pill">${size}</span> <button class="btn small danger" data-clear="${name}">Retirer</button>`:''}</div><div class="row"><select data-name="${name}" ${frozen?'disabled':''}>${options}</select></div><div class="hint">La taille se sauvegarde automatiquement et se fige.</div></div>`;}c.innerHTML=`<h3 class="section-title">Sélection des tailles de t-shirts</h3><div class="grid">${rows}</div>`;c.querySelectorAll('select[data-name]').forEach(sel=>{sel.addEventListener('change',async()=>{const name=sel.dataset.name;const size=sel.value;const prev=state.tshirtData?.[name]||'';if(!size)return;try{await apiSetTshirt(name,size);await loadState();sel.disabled=true;renderTshirts();}catch(e){sel.value=prev;sel.disabled=false;alert("Impossible d'enregistrer (API)\n"+e.message);}})});c.querySelectorAll('[data-clear]').forEach(btn=>{btn.addEventListener('click',async()=>{if(btn.disabled)return;const name=btn.dataset.clear;const sel=c.querySelector(`select[data-name="${name}"]`);const prev=state.tshirtData?.[name]||'';btn.disabled=true;btn.textContent='Suppression...';try{const r=await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,remove:true})});if(!r.ok)throw new Error('HTTP '+r.status+' '+await r.text());await r.json().catch(()=>({}));await loadState();renderTshirts();}catch(e){if(sel){sel.value=prev;}if(state.tshirtData)state.tshirtData[name]=prev;alert('Impossible de retirer (API)\n'+e.message);}finally{btn.disabled=false;btn.textContent='Retirer';}})});}
-  function renderPlanning(){const c=document.getElementById('content');let rows='';for(const slotId of SLOTS){const slot=state.scheduleData[slotId]||{p1:null,p2:null};const occ=[slot.p1,slot.p2].filter(Boolean).join(', ')||'—';const options=['<option value="">-- Choisir un --</option>'].concat(MEMBERS.map(n=>`<option value="${n}">${n}</option>`)).join('');rows+=`<div class="slot"><div class="slot-title">${slotId.replace('slot-','').replace('T',' ')}</div><div class="slot-occupied">Occupé: ${occ}</div><div class="row"><div style="flex:1"><div class="hint">Personne 1</div><select data-slot="${slotId}" data-pos="0">${options}</select>${slot.p1?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p1">Retirer p1</button>`:''}</div><div style="flex:1"><div class="hint">Personne 2</div><select data-slot="${slotId}" data-pos="1">${options}</select>${slot.p2?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p2">Retirer p2</button>`:''}</div></div><div class="slot-cap">${2-(slot.p1?1:0)-(slot.p2?1:0)} place(s) restante(s)</div></div>`;}c.innerHTML=`<h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3><div class="grid">${rows}</div>`;c.querySelectorAll('select[data-slot][data-pos]').forEach(sel=>{sel.addEventListener('change',async()=>{const slotId=sel.dataset.slot;const pos=(String(sel.dataset.pos)==='0')?'p1':'p2';const name=sel.value;if(!name)return;sel.disabled=true;try{await apiSetSlot(slotId,pos,name,false);await loadState();renderPlanning();}catch(err){sel.disabled=false;alert("Impossible d'enregistrer le créneau\n"+err.message);}})});c.querySelectorAll('[data-unset-slot]').forEach(btn=>{btn.addEventListener('click',async()=>{if(btn.disabled)return;const slotId=btn.dataset.slot;const pos=btn.dataset.pos;btn.disabled=true;try{await apiSetSlot(slotId,pos,'',true);await loadState();renderPlanning();}catch(err){btn.disabled=false;alert("Impossible de retirer le créneau\n"+err.message);}})});}
-  function renderResume(){const c=document.getElementById('content');const tsh=MEMBERS.map(n=>`<li>${n}: ${state.tshirtData[n]||'—'}</li>`).join('');const pl=Object.entries(state.scheduleData).map(([id,s])=>`<li>${id.replace('slot-','')}: ${[s.p1,s.p2].filter(Boolean).join(', ')||'—'}</li>`).join('');c.innerHTML=`<h3 class="section-title">Résumé</h3><div class="grid"><div><h4>T-Shirts</h4><ul>${tsh}</ul></div><div><h4>Planning</h4><ul>${pl}</ul></div></div>`;}
-  document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>setActiveTab(tab.dataset.tab));});
-  (async()=>{await loadState();setActiveTab('tshirts');})();
-  window.setActiveTab=setActiveTab;window.renderTshirts=renderTshirts;window.renderPlanning=renderPlanning;window.renderResume=renderResume;window.state=state;
+  // ===== Données =====
+  const MEMBERS = [
+    "Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V",
+    "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"
+  ];
+  const SIZES = ["XS","S","M","L","XL","XXL"];
+  const SLOTS = [
+    "slot-2025-10-11-15:00","slot-2025-10-11-15:30","slot-2025-10-11-16:00","slot-2025-10-11-16:30",
+    "slot-2025-10-11-17:00","slot-2025-10-11-17:30","slot-2025-10-11-18:00","slot-2025-10-11-18:30",
+    "slot-2025-10-11-19:00","slot-2025-10-11-19:30","slot-2025-10-11-20:00","slot-2025-10-11-20:30",
+    "slot-2025-10-11-21:00","slot-2025-10-11-21:30","slot-2025-10-11-22:00","slot-2025-10-11-22:30",
+    "slot-2025-10-12-09:00","slot-2025-10-12-09:30","slot-2025-10-12-10:00","slot-2025-10-12-10:30"
+  ];
+
+  // ===== État =====
+  const state = { tshirtData:{}, scheduleData:{} };
+
+  // ===== API =====
+  async function apiGet(){ const r=await fetch('/api/state-get'); if(!r.ok) throw new Error('GET '+r.status); return r.json(); }
+  async function apiSetTshirt(name,size){
+    const r = await fetch('/api/state-set-tshirt',{ method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({name,size}) });
+    if(!r.ok) throw new Error('apiSetTshirt '+r.status+' '+await r.text());
+    return r.json().catch(()=>({ok:true}));
+  }
+  async function apiSetSlot(slotId,pos,name,remove=false){
+    const payload = remove ? {slotId,pos,remove:true} : {slotId,pos,name};
+    const r = await fetch('/api/state-set-slot',{ method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload) });
+    if(!r.ok) throw new Error('apiSetSlot '+r.status+' '+await r.text());
+    return r.json().catch(()=>({ok:true}));
+  }
+  async function loadState(){ const s = await apiGet(); state.tshirtData = s.tshirtData||{}; state.scheduleData = s.scheduleData||{}; }
+
+  // ===== UI Tabs =====
+  function setActiveTab(tab){
+    document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===tab));
+    if (tab==='tshirts') renderTshirts();
+    else if (tab==='planning') renderPlanning();
+    else renderResume();
+  }
+
+  // ===== T-Shirts =====
+  function renderTshirts(){
+    const content = document.getElementById('content');
+    let rows='';
+    for(const name of MEMBERS){
+      const size = state.tshirtData[name] || '';
+      const frozen = !!size;
+      const options = ['<option value="">-- Choisir une taille --</option>']
+        .concat(SIZES.map(s=>`<option value="${s}" ${s===size?'selected':''}>${s}</option>`)).join('');
+      rows += `
+        <div class="slot">
+          <div class="row" style="justify-content:space-between">
+            <div class="slot-title">${name}</div>
+            ${size?`<span class="pill">${size}</span> <button class="btn small danger" data-clear="${name}">Retirer</button>`:''}
+          </div>
+          <div class="row">
+            <select data-name="${name}" ${frozen?'disabled':''}>${options}</select>
+          </div>
+          <div class="hint">La taille se sauvegarde automatiquement et se fige.</div>
+        </div>`;
+    }
+    content.innerHTML = `<h3 class="section-title">Sélection des tailles de t-shirts</h3><div class="grid">${rows}</div>`;
+
+    // change -> save -> reload -> rerender (+ auto-bascule Planning 1x)
+    content.querySelectorAll('select[data-name]').forEach(sel=>{
+      sel.addEventListener('change', async ()=>{
+        const name = sel.dataset.name;
+        const size = sel.value;
+        const prev = state.tshirtData?.[name] || '';
+        if(!size) return;
+        try{
+          await apiSetTshirt(name,size);
+          await loadState();
+          sel.disabled = true;
+          renderTshirts();
+
+          // 👉 Auto-switch vers Planning (une seule fois par session)
+          if (!sessionStorage.getItem('jumpedToPlanning')) {
+            sessionStorage.setItem('jumpedToPlanning','1');
+            setTimeout(() => {
+              setActiveTab('planning');
+              const first = document.querySelector('#content select[data-slot]');
+              first?.scrollIntoView({behavior:'smooth', block:'start'});
+              first?.focus();
+            }, 150);
+          }
+        }catch(e){
+          sel.value = prev; sel.disabled = false;
+          alert("Impossible d'enregistrer (API)");
+        }
+      });
+    });
+
+    // retirer -> remove:true -> reload -> rerender
+    content.querySelectorAll('[data-clear]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if (btn.disabled) return;
+        const name = btn.dataset.clear;
+        const sel = content.querySelector(`select[data-name="${name}"]`);
+        const prev = state.tshirtData?.[name] || '';
+        btn.disabled = true; btn.textContent='Suppression...';
+        try{
+          const r = await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,remove:true})});
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          await r.json().catch(()=>({}));
+          await loadState();
+          renderTshirts();
+        }catch(e){
+          if (sel) sel.value = prev;
+          if (state.tshirtData) state.tshirtData[name] = prev;
+          alert('Impossible de retirer (API)');
+        } finally { btn.disabled = false; btn.textContent='Retirer'; }
+      });
+    });
+  }
+
+  // ===== Planning =====
+  function renderPlanning(){
+    const content = document.getElementById('content');
+    let rows='';
+    for(const slotId of SLOTS){
+      const slot = state.scheduleData[slotId] || {p1:null,p2:null};
+      const occ = [slot.p1,slot.p2].filter(Boolean).join(', ') || '—';
+      const options = ['<option value="">-- Choisir un --</option>'].concat(MEMBERS.map(n=>`<option value="${n}">${n}</option>`)).join('');
+      rows += `
+        <div class="slot">
+          <div class="slot-title">${slotId.replace('slot-','')}</div>
+          <div class="slot-occupied">Occupé: ${occ}</div>
+          <div class="row">
+            <div style="flex:1">
+              <div class="hint">Personne 1</div>
+              <select data-slot="${slotId}" data-pos="0">${options}</select>
+              ${slot.p1?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p1">Retirer p1</button>`:''}
+            </div>
+            <div style="flex:1">
+              <div class="hint">Personne 2</div>
+              <select data-slot="${slotId}" data-pos="1">${options}</select>
+              ${slot.p2?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p2">Retirer p2</button>`:''}
+            </div>
+          </div>
+          <div class="slot-cap">${2-(slot.p1?1:0)-(slot.p2?1:0)} place(s) restante(s)</div>
+        </div>`;
+    }
+    content.innerHTML = `<h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3><div class="grid">${rows}</div>`;
+
+    // change -> save -> reload -> rerender
+    content.querySelectorAll('select[data-slot][data-pos]').forEach(sel=>{
+      sel.addEventListener('change', async ()=>{
+        const slotId = sel.dataset.slot;
+        const pos = (String(sel.dataset.pos)==='0') ? 'p1' : 'p2';
+        const name = sel.value;
+        if(!name) return;
+        sel.disabled = true;
+        try{
+          await apiSetSlot(slotId,pos,name,false);
+          await loadState();
+          renderPlanning();
+        }catch(err){
+          sel.disabled = false;
+          alert("Impossible d'enregistrer le créneau");
+        }
+      });
+    });
+
+    // retirer -> remove:true -> reload -> rerender
+    content.querySelectorAll('[data-unset-slot]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if (btn.disabled) return;
+        const slotId = btn.dataset.slot, pos = btn.dataset.pos;
+        btn.disabled = true;
+        try{
+          await apiSetSlot(slotId,pos,'',true);
+          await loadState();
+          renderPlanning();
+        }catch(err){
+          btn.disabled = false;
+          alert("Impossible de retirer le créneau");
+        }
+      });
+    });
+  }
+
+  // ===== Résumé =====
+  function renderResume(){
+    const content = document.getElementById('content');
+    const tshRows = MEMBERS.map(n=>`<li>${n}: ${state.tshirtData[n]||'—'}</li>`).join('');
+    const plRows = Object.entries(state.scheduleData).map(([id,s])=>{
+      const occ = [s.p1,s.p2].filter(Boolean).join(', ') || '—';
+      return `<li>${id.replace('slot-','')}: ${occ}</li>`;
+    }).join('');
+    content.innerHTML = `
+      <h3 class="section-title">Résumé</h3>
+      <div class="grid">
+        <div><h4>T-Shirts</h4><ul>${tshRows}</ul></div>
+        <div><h4>Planning</h4><ul>${plRows}</ul></div>
+      </div>`;
+  }
+
+  // ===== Tabs & Init =====
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=> setActiveTab(tab.dataset.tab));
+  });
+  (async ()=>{ await loadState(); setActiveTab('tshirts'); })();
+
+  // helpers en global (debug / autres scripts)
+  window.setActiveTab=setActiveTab;
+  window.renderTshirts=renderTshirts;
+  window.renderPlanning=renderPlanning;
+  window.renderResume=renderResume;
+  window.state=state;
   </script>
 </body>
 </html>
