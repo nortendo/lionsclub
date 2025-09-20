@@ -29,7 +29,7 @@
     .card{
       background:var(--card);border-radius:14px;margin-top:14px;box-shadow:0 10px 24px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06)
     }
-    .tabs{ position:relative; z-index:20; display:flex;border-bottom:1px solid #eee;gap:6px;padding:0 10px}
+    .tabs{display:flex;border-bottom:1px solid #eee;gap:6px;padding:0 10px}
     .tab{
       appearance:none;border:0;background:transparent;padding:14px 18px;margin:0;border-bottom:2px solid transparent;
       font-weight:600;color:#334155;cursor:pointer;display:flex;gap:10px;align-items:center
@@ -154,9 +154,9 @@ async function loadState(){
   state = { tshirtData:data.tshirtData||{}, scheduleData:data.scheduleData||{}, members: data.members?.length? data.members: MEMBERS };
 }
 function showTab(key){
-  if(key==='tshirts') renderTshirts(); window.rebindTabs && window.rebindTabs();
-  if(key==='planning') renderPlanning(); window.rebindTabs && window.rebindTabs();
-  if(key==='resume') renderResume(); window.rebindTabs && window.rebindTabs();
+  if(key==='tshirts') renderTshirts();
+  if(key==='planning') renderPlanning();
+  if(key==='resume') renderResume();
 }
 
 /** ========= RENDER: T-SHIRTS ========= */
@@ -198,7 +198,7 @@ function renderTshirts(){
       sel.disabled = true;
       await apiSetTshirt(name, size);
       await loadState();
-      renderTshirts(); window.rebindTabs && window.rebindTabs();
+      renderTshirts();
       
       // Redirection automatique vers l'onglet Planning après sélection d'une taille
       setTimeout(() => {
@@ -225,7 +225,7 @@ function renderTshirts(){
       try {
         await apiSetTshirt(name, null);
         await loadState();
-        renderTshirts(); window.rebindTabs && window.rebindTabs();
+        renderTshirts();
       } catch (error) {
         alert(`Erreur lors de la suppression: ${error.message}`);
         btn.disabled = false;
@@ -323,7 +323,7 @@ function renderPlanning(){
       sel.disabled = true;
       await apiSetSlot(slotId, pos, name);
       await loadState();
-      renderPlanning(); window.rebindTabs && window.rebindTabs();
+      renderPlanning();
     });
   });
   // remove
@@ -334,7 +334,7 @@ function renderPlanning(){
       const properPos = pos === '1' ? 'p1' : 'p2';
       await apiSetSlot(slotId, properPos, null, true);
       await loadState();
-      renderPlanning(); window.rebindTabs && window.rebindTabs();
+      renderPlanning();
     });
   });
 }
@@ -459,46 +459,34 @@ function renderResume(){
   showTab('tshirts');
 })();
 </script>
-<script>
-// ==== ROBUST TABS (idempotent, works with re-render) ====
-(function(){
-  if (window.__tabsBound) return; window.__tabsBound = true;
 
-  function panels(){ 
-    return Array.from(document.querySelectorAll('[data-panel], #tab-tshirts, #tab-planning, #tab-resume')); 
-  }
-  function isPanel(el, key){
-    if(!el) return false;
-    const dp = el.getAttribute && el.getAttribute('data-panel');
-    if (dp) return dp === key;
-    const id = el.id || '';
-    return id === 'tab-'+key;
-  }
-  function activateTab(key){
-    document.querySelectorAll('.tab[data-tab]').forEach(btn=>{
-      btn.classList.toggle('active', btn.getAttribute('data-tab') === key);
+<script>
+// === SIMPLE RENDER-BASED TABS (restores original behavior) ===
+(function(){
+  function setActive(key){
+    document.querySelectorAll('.tab[data-tab]').forEach(b=>{
+      b.classList.toggle('active', b.getAttribute('data-tab')===key);
     });
-    panels().forEach(p=>{
-      const show = isPanel(p, key);
-      p.style.display = show ? '' : 'none';
-      p.hidden = !show;
-    });
-    try{ history.replaceState(null, '', '#' + key); }catch(e){}
   }
-  window.showTab = function(key){ activateTab(key); };
+  window.showTab = function(key){
+    setActive(key);
+    if(key==='tshirts'){ try{ renderTshirts(); }catch(e){ console.error(e); } }
+    else if(key==='planning'){ try{ renderPlanning(); }catch(e){ console.error(e); } }
+    else { try{ renderResume(); }catch(e){ console.error(e); } }
+    try{ history.replaceState(null,'','#'+key); }catch(e){}
+  };
 
   document.addEventListener('click', (e)=>{
     const btn = e.target.closest('.tab[data-tab]');
     if(!btn) return;
-    e.preventDefault(); e.stopPropagation();
-    activateTab(btn.getAttribute('data-tab'));
+    e.preventDefault();
+    showTab(btn.getAttribute('data-tab'));
   }, {passive:false});
 
-  const initial = (location.hash||'').replace('#','') || (document.querySelector('.tab[data-tab]')?.getAttribute('data-tab')) || 'tshirts';
-  activateTab(initial);
-
-  window.rebindTabs = ()=> activateTab(document.querySelector('.tab.active')?.getAttribute('data-tab') || initial);
+  const initial = (location.hash||'').replace('#','') || 'tshirts';
+  showTab(initial);
 })();
 </script>
+
 </body>
 </html>
