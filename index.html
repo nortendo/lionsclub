@@ -76,5 +76,34 @@
   (async()=>{await loadState();setActiveTab('tshirts');})();
   window.setActiveTab=setActiveTab;window.renderTshirts=renderTshirts;window.renderPlanning=renderPlanning;window.renderResume=renderResume;window.state=state;
   </script>
+
+<!-- Auto-bascule overlay: triggers Planning switch after first time a member picks a T-shirt size -->
+<script>
+(function(){
+  // Expose helpers if not already exposed
+  if (typeof window.setActiveTab !== 'function' && typeof setActiveTab === 'function') window.setActiveTab = setActiveTab;
+  if (typeof window.renderTshirts !== 'function' && typeof renderTshirts === 'function') window.renderTshirts = renderTshirts;
+  if (typeof window.renderPlanning !== 'function' && typeof renderPlanning === 'function') window.renderPlanning = renderPlanning;
+
+  document.addEventListener('change', function(e){
+    const sel = e.target;
+    if (!sel || !sel.matches || !sel.matches('select[data-name]')) return;
+    const name = sel.dataset.name;
+    const prev = (window.state && window.state.tshirtData && window.state.tshirtData[name]) || '';
+    const now = sel.value;
+    // First time selection for this member: prev empty -> now non-empty
+    if (!prev && now) {
+      setTimeout(function(){
+        if (typeof window.setActiveTab === 'function') {
+          window.setActiveTab('planning');
+          const first = document.querySelector('#content select[data-slot]');
+          if (first) { first.scrollIntoView({behavior:'smooth', block:'start'}); first.focus(); }
+        }
+      }, 250); // let the original save + rerender complete
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
