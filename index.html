@@ -150,21 +150,22 @@ function renderTshirts(){
   const sizes = ['XS','S','M','L','XL','XXL'];
   const rows = state.members.map(name=>{
     const val = state.tshirtData[name] || '';
+    const hasSize = val && val !== ''; // Vérifier si on a vraiment une taille
     const opts = ['<option value="">-- Choisir une taille --</option>']
       .concat(sizes.map(s=>`<option value="${s}" ${val===s?'selected':''}>${s}</option>`)).join('');
-    const disabled = val ? 'disabled' : '';
-    const badge = val ? `<span class="pill">${val}</span>` : '';
+    const disabled = hasSize ? 'disabled' : '';
+    const badge = hasSize ? `<span class="pill">${val}</span>` : '';
     return `
       <div class="slot-card">
         <div class="row" style="justify-content:space-between">
           <div><strong>${name}</strong></div>
-          <div class="row">${badge}${val?`<button class="btn small ghost" data-clear="${name}">Retirer</button>`:''}</div>
+          <div class="row">${badge}${hasSize?`<button class="btn small ghost" data-clear="${name}">Retirer</button>`:''}</div>
         </div>
         <div class="row" style="margin-top:10px">
           <select class="select" data-name="${name}" ${disabled}>
             ${opts}
           </select>
-          ${!val?`<span class="hint">La taille se sauvegarde automatiquement et se fige.</span>`:''}
+          ${!hasSize?`<span class="hint">La taille se sauvegarde automatiquement et se fige.</span>`:''}
         </div>
       </div>`;
   }).join('');
@@ -190,9 +191,18 @@ function renderTshirts(){
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const name = btn.dataset.clear;
-      await apiSetTshirt(name, null);
-      await loadState();
-      renderTshirts();
+      try {
+        console.log('Envoi requête de suppression pour:', name, 'avec size: null');
+        await apiSetTshirt(name, null);
+        console.log('Requête API réussie, rechargement de l\'état...');
+        await loadState();
+        console.log('État rechargé, re-render...');
+        renderTshirts();
+        console.log('Re-render terminé');
+      } catch (error) {
+        console.error('Erreur détaillée:', error);
+        alert(`Erreur lors de la suppression: ${error.message}`);
+      }
     });
   });
 }
