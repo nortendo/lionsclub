@@ -1,9 +1,9 @@
-const { getState, setState } = require('./_upstash.js');
+const { getState, setState } = require('./_kv.js');
 
 function normPos(pos){
   if (pos === 'p1' || pos === 'p2') return pos;
-  if (pos === 0 || pos === '0' || pos === 1 || pos === '1'){
-    return (String(pos) === '0') ? 'p1' : 'p2';
+  if (pos === 0 || pos === '0' || pos === 1 || pos === '1') {
+    return String(pos) === '0' ? 'p1' : 'p2';
   }
   return null;
 }
@@ -21,36 +21,34 @@ module.exports = async (req, res) => {
   }
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  try{
+  try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body||'{}') : (req.body || {});
-    const slotId = body.slotId;
-    const rawPos = body.pos;
+    const { slotId } = body;
+    const pos = normPos(body.pos);
     const remove = body.remove === true;
     const name = body.name;
 
-    const pos = normPos(rawPos);
-    if (!slotId || !pos){
-      // be lenient: silently no-op to avoid breaking UI if spurious calls happen
-      return res.status(200).json({ ok:false, ignored:true });
+    if (!slotId || !pos) {
+      return res.status(400).json({ ok:false, error:'slotId/pos requis' });
     }
 
-    const state = getState();
+    const state = await getState();
     state.scheduleData = state.scheduleData || {};
     const current = state.scheduleData[slotId] || { p1:null, p2:null };
 
-    if (remove){
+    if (remove) {
       current[pos] = null;
     } else {
-      if (!name || typeof name !== 'string' || !name.trim()){
-        return res.status(200).json({ ok:false, ignored:true });
+      if (!name || typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({ ok:false, error:'name requis' });
       }
       current[pos] = name;
     }
 
     state.scheduleData[slotId] = current;
-    setState(state);
+    await setState(state);
     return res.status(200).json({ ok:true, slot: current });
-  } catch(e){
+  } catch (e) {
     console.error('state-set-slot error', e);
     return res.status(500).json({ ok:false, error:'Erreur serveur' });
   }

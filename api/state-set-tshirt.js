@@ -1,4 +1,4 @@
-const { getState, setState } = require('./_upstash.js');
+const { getState, setState } = require('./_kv.js');
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
@@ -18,28 +18,27 @@ module.exports = async (req, res) => {
     const { name } = body;
     let { size, remove } = body;
 
-    if (!name || typeof name !== 'string' || !name.trim()){
+    if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ ok:false, error:'Paramètre "name" invalide' });
     }
 
     const allowed = ['XS','S','M','L','XL','XXL'];
     const isRemove = remove === true || size === null || size === '';
 
-    const state = getState();
-    state.tshirtData = state.tshirtData || {};
+    const state = await getState();
 
-    if (isRemove){
+    if (isRemove) {
       state.tshirtData[name] = '';
     } else {
-      if (typeof size !== 'string' || !allowed.includes(size)){
+      if (typeof size !== 'string' || !allowed.includes(size)) {
         return res.status(400).json({ ok:false, error:`Taille invalide. Tailles acceptées: ${allowed.join(', ')}` });
       }
       state.tshirtData[name] = size;
     }
 
-    setState(state);
+    await setState(state);
     return res.status(200).json({ ok:true, name, size: state.tshirtData[name] || '' });
-  } catch (e){
+  } catch (e) {
     console.error('state-set-tshirt error', e);
     return res.status(500).json({ ok:false, error:'Erreur serveur' });
   }
