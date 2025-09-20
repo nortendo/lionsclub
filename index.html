@@ -45,7 +45,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>Lions Club La Louvière - Relais pour la Vie</h1>
+      <h1>Lions Club - Relais pour la Vie</h1>
       <div class="subtitle"><span class="badge">La Louvière • 11–12 Octobre 2025</span></div>
     </div>
 
@@ -62,7 +62,7 @@
   <script>
   const MEMBERS=["Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V","Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"];
   const SIZES=["XS","S","M","L","XL","XXL"];
-  const SLOTS=["slot-2025-10-11-15:00","slot-2025-10-11-15:30","slot-2025-10-11-16:00","slot-2025-10-11-16:30","slot-2025-10-11-17:00","slot-2025-10-11-17:30","slot-2025-10-11-18:00","slot-2025-10-11-18:30","slot-2025-10-11-19:00","slot-2025-10-11-19:30","slot-2025-10-11-20:00","slot-2025-10-11-20:30","slot-2025-10-11-21:00","slot-2025-10-11-21:30","slot-2025-10-11-22:00","slot-2025-10-11-22:30","slot-2025-10-11-23:00","slot-2025-10-11-23:30","slot-2025-10-12-00:00","slot-2025-10-12-00:30","slot-2025-10-12-01:00","slot-2025-10-12-01:30","slot-2025-10-12-02:00","slot-2025-10-12-02:30","slot-2025-10-12-03:00","slot-2025-10-12-03:30","slot-2025-10-12-04:00","slot-2025-10-12-04:30","slot-2025-10-12-05:00","slot-2025-10-12-05:30","slot-2025-10-12-06:00","slot-2025-10-12-06:30","slot-2025-10-12-07:00","slot-2025-10-12-07:30","slot-2025-10-12-08:00","slot-2025-10-12-08:30","slot-2025-10-12-09:00","slot-2025-10-12-09:30","slot-2025-10-12-10:00","slot-2025-10-12-10:30","slot-2025-10-12-11:00","slot-2025-10-12-11:30","slot-2025-10-12-12:00","slot-2025-10-12-12:30","slot-2025-10-12-13:00","slot-2025-10-12-13:30","slot-2025-10-12-14:00","slot-2025-10-12-14:30","slot-2025-10-12-15:00"];
+  const SLOTS=["slot-2025-10-11-15:00","slot-2025-10-11-15:30","slot-2025-10-11-16:00","slot-2025-10-11-16:30","slot-2025-10-11-17:00","slot-2025-10-11-17:30","slot-2025-10-11-18:00","slot-2025-10-11-18:30","slot-2025-10-11-19:00","slot-2025-10-11-19:30","slot-2025-10-11-20:00","slot-2025-10-11-20:30","slot-2025-10-11-21:00","slot-2025-10-11-21:30","slot-2025-10-11-22:00","slot-2025-10-11-22:30","slot-2025-10-12-09:00","slot-2025-10-12-09:30","slot-2025-10-12-10:00","slot-2025-10-12-10:30"];
   const state={tshirtData:{},scheduleData:{}};
   async function apiGet(){const r=await fetch('/api/state-get');if(!r.ok)throw new Error('GET '+r.status);return r.json();}
   async function apiSetTshirt(name,size){const r=await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,size})});if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('apiSetTshirt '+r.status+' '+t)}return r.json().catch(()=>({ok:true}));}
