@@ -242,7 +242,7 @@ function buildAllSlots(){
 function renderPlanning(){
   const all = buildAllSlots();
   const memberOpts = (selVal)=> ['<option value="">-- Choisir une personne --</option>']
-    .concat(state.members.map(n=>`<option value="${n}" ${selVal===n?'selected':''}>${n}</option>`)).join('');
+    .concat(MEMBERS.map(n=>`<option value="${n}" ${selVal===n?'selected':''}>${n}</option>`)).join('');
 
   const rows = all.map(s=>{
     const slot = state.scheduleData[s.id] || { p1:null, p2:null };
@@ -336,7 +336,7 @@ function computeKpis(){
   const totalSlots = buildAllSlots().length * 2; // 2 places par créneau
   const available = totalSlots - taken;
 
-  const noShirtNoSlot = state.members.filter(n=>{
+  const noShirtNoSlot = MEMBERS.filter(n=>{
     const hasT = !!state.tshirtData[n];
     const hasS = Object.values(state.scheduleData).some(s=>s?.p1===n || s?.p2===n);
     return !hasT && !hasS;
@@ -349,7 +349,7 @@ function renderResume(){
   const { tshirtChosen, taken, available, noShirtNoSlot } = computeKpis();
 
   // détails t-shirts
-  const rows = state.members
+  const rows = MEMBERS
     .filter(n=> state.tshirtData[n])
     .map(n=> `<tr><td>${n}</td><td>${state.tshirtData[n]}</td></tr>`).join('') || `<tr><td colspan="2" class="muted">—</td></tr>`;
 
