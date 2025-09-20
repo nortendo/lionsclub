@@ -1,80 +1,175 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Lions Club - Relais pour la Vie à La Louvière 11 & 12 octobre 2025</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Lions Club - Relais pour la Vie</title>
   <style>
-    :root{
-      --bg1:#5c4ee5;--bg2:#a146f0;--card:#fff;--text:#1b1f23;--muted:#667085;--primary:#ff7a18;--green:#17b26a;--red:#ef4444;
-      --pill:#eef2ff;--pillText:#4338ca;--chip:#f1f5f9;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2)) fixed;color:var(--text)}
-    .container{max-width:1100px;margin:32px auto;padding:0 16px}
-    .card{background:var(--card);border-radius:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);padding:20px}
-    .header{padding:24px 20px 12px;color:#fff;background:transparent}
-    .header h1{margin:0 0 4px;font-size:28px;line-height:1.1;font-weight:800;text-shadow:0 3px 12px rgba(0,0,0,.25)}
-    .subtitle{display:flex;align-items:center;gap:8px;color:#fff;opacity:.9}
-    .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:999px;padding:6px 10px;font-weight:600}
-    .tabs{display:flex;gap:16px;border-bottom:1px solid #eee;margin-bottom:16px}
-    .tab{padding:10px 14px;border-radius:999px;cursor:pointer;font-weight:600;color:#555}
-    .tab.active{background:var(--pill);color:var(--pillText)}
-    .section-title{margin:10px 0 14px;font-size:18px}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border-radius:999px;padding:6px 10px;font-weight:600;font-size:13px}
-    select,button{font-family:inherit}
-    select{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}
-    select:disabled{opacity:.7;cursor:not-allowed}
-    .btn{padding:8px 12px;border:none;border-radius:12px;background:#111827;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-    .btn.small{padding:6px 10px;border-radius:10px}
-    .btn.ghost{background:#f8fafc;color:#111827;border:1px solid #e5e7eb}
-    .btn.danger{background:var(--red)}
-    .hint{color:#6b7280;font-size:12px}
-    .slot{border:1px solid #e5e7eb;border-radius:14px;padding:12px}
-    .slot-title{font-weight:700;margin-bottom:6px}
-    .slot-occupied{color:#6b7280;margin-bottom:6px}
-    .slot-cap{margin-top:6px;font-weight:700}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    body { font-family: Arial, sans-serif; margin: 20px; background:#fafafa; }
+    nav button { margin: 5px; padding: 10px 15px; border:none; border-radius:8px; background:#005baa; color:#fff; cursor:pointer; }
+    nav button.active { background:#ffcc00; color:#000; font-weight:bold; }
+    section { display:none; margin-top:20px; }
+    section.active { display:block; }
+    table { border-collapse: collapse; width:100%; margin-top:10px; background:#fff; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+    th { background:#eee; }
+    select:disabled { background:#ddd; color:#555; }
+    .remove-btn { margin-left:10px; padding:3px 8px; border:none; border-radius:5px; background:#d9534f; color:#fff; cursor:pointer; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Lions Club - Relais pour la Vie</h1>
-      <div class="subtitle"><span class="badge">La Louvière • 11–12 Octobre 2025</span></div>
-    </div>
+  <h1>Lions Club La Louvière - Relais pour la Vie</h1>
+  <nav>
+    <button data-tab="tshirts" class="active">Tailles T-shirts</button>
+    <button data-tab="planning">Planning Marche</button>
+    <button data-tab="resume">Résumé</button>
+  </nav>
 
-    <div class="card">
-      <div class="tabs">
-        <div class="tab active" data-tab="tshirts">👕 Tailles T-Shirts</div>
-        <div class="tab" data-tab="planning">🚶 Planning Marche</div>
-        <div class="tab" data-tab="resume">📊 Résumé</div>
-      </div>
-      <div id="content"></div>
-    </div>
-  </div>
+  <section id="tshirts" class="active">
+    <h2>Choix des tailles T-shirts</h2>
+    <div id="tshirt-list"></div>
+  </section>
+
+  <section id="planning">
+    <h2>Planning Marche</h2>
+    <div id="planning-list"></div>
+  </section>
+
+  <section id="resume">
+    <h2>Résumé des inscriptions</h2>
+    <pre id="resume-content"></pre>
+  </section>
 
   <script>
-  const MEMBERS=["Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V","Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"];
-  const SIZES=["XS","S","M","L","XL","XXL"];
-  const SLOTS=["slot-2025-10-11-15:00","slot-2025-10-11-15:30","slot-2025-10-11-16:00","slot-2025-10-11-16:30","slot-2025-10-11-17:00","slot-2025-10-11-17:30","slot-2025-10-11-18:00","slot-2025-10-11-18:30","slot-2025-10-11-19:00","slot-2025-10-11-19:30","slot-2025-10-11-20:00","slot-2025-10-11-20:30","slot-2025-10-11-21:00","slot-2025-10-11-21:30","slot-2025-10-11-22:00","slot-2025-10-11-22:30","slot-2025-10-11-23:00","slot-2025-10-11-23:30","slot-2025-10-12-00:00","slot-2025-10-12-00:30","slot-2025-10-12-01:00","slot-2025-10-12-01:30","slot-2025-10-12-02:00","slot-2025-10-12-02:30","slot-2025-10-12-03:00","slot-2025-10-12-03:30","slot-2025-10-12-04:00","slot-2025-10-12-04:30","slot-2025-10-12-05:00","slot-2025-10-12-05:30","slot-2025-10-12-06:00","slot-2025-10-12-06:30","slot-2025-10-12-07:00","slot-2025-10-12-07:30","slot-2025-10-12-08:00","slot-2025-10-12-08:30","slot-2025-10-12-09:00","slot-2025-10-12-09:30","slot-2025-10-12-10:00","slot-2025-10-12-10:30","slot-2025-10-12-11:00","slot-2025-10-12-11:30","slot-2025-10-12-12:00","slot-2025-10-12-12:30","slot-2025-10-12-13:00","slot-2025-10-12-13:30","slot-2025-10-12-14:00","slot-2025-10-12-14:30","slot-2025-10-12-15:00"];
-  const state={tshirtData:{},scheduleData:{}};
-  async function apiGet(){const r=await fetch('/api/state-get');if(!r.ok)throw new Error('GET '+r.status);return r.json();}
-  async function apiSetTshirt(name,size){const r=await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,size})});if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('apiSetTshirt '+r.status+' '+t)}return r.json().catch(()=>({ok:true}));}
-  async function apiSetSlot(slotId,pos,name,remove=false){const payload=remove?{slotId,pos,remove:true}:{slotId,pos,name};const r=await fetch('/api/state-set-slot',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});if(!r.ok){const t=await r.text().catch(()=> '');throw new Error('apiSetSlot '+r.status+' '+t)}return r.json().catch(()=>({ok:true}));}
-  async function loadState(){const s=await apiGet();state.tshirtData=s.tshirtData||{};state.scheduleData=s.scheduleData||{};}
-  function setActiveTab(tab){document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));if(tab==='tshirts')renderTshirts();else if(tab==='planning')renderPlanning();else renderResume();}
-  function renderTshirts(){const c=document.getElementById('content');let rows='';for(const name of MEMBERS){const size=state.tshirtData[name]||'';const frozen=!!size;const options=['<option value="">-- Choisir une taille --</option>'].concat(SIZES.map(s=>`<option value="${s}" ${s===size?'selected':''}>${s}</option>`)).join('');rows+=`<div class="slot"><div class="row" style="justify-content:space-between"><div class="slot-title">${name}</div>${size?`<span class="pill">${size}</span> <button class="btn small danger" data-clear="${name}">Retirer</button>`:''}</div><div class="row"><select data-name="${name}" ${frozen?'disabled':''}>${options}</select></div><div class="hint">La taille se sauvegarde automatiquement et se fige.</div></div>`;}c.innerHTML=`<h3 class="section-title">Sélection des tailles de t-shirts</h3><div class="grid">${rows}</div>`;c.querySelectorAll('select[data-name]').forEach(sel=>{sel.addEventListener('change',async()=>{const name=sel.dataset.name;const size=sel.value;const prev=state.tshirtData?.[name]||'';if(!size)return;try{await apiSetTshirt(name,size);await loadState();sel.disabled=true;renderTshirts();if(!sessionStorage.getItem('jumpedToPlanning')){sessionStorage.setItem('jumpedToPlanning','1');setTimeout(()=>{setActiveTab('planning');const first=document.querySelector('#content select[data-slot]');first?.scrollIntoView({behavior:'smooth',block:'start'});first?.focus();},150);}}catch(e){sel.value=prev;sel.disabled=false;alert("Impossible d'enregistrer (API)\n"+e.message);}})});c.querySelectorAll('[data-clear]').forEach(btn=>{btn.addEventListener('click',async()=>{if(btn.disabled)return;const name=btn.dataset.clear;const sel=c.querySelector(`select[data-name="${name}"]`);const prev=state.tshirtData?.[name]||'';btn.disabled=true;btn.textContent='Suppression...';try{const r=await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,remove:true})});if(!r.ok)throw new Error('HTTP '+r.status+' '+await r.text());await r.json().catch(()=>({}));await loadState();renderTshirts();}catch(e){if(sel){sel.value=prev;}if(state.tshirtData)state.tshirtData[name]=prev;alert('Impossible de retirer (API)\n'+e.message);}finally{btn.disabled=false;btn.textContent='Retirer';}})});}
-  function renderPlanning(){const c=document.getElementById('content');let rows='';for(const slotId of SLOTS){const slot=state.scheduleData[slotId]||{p1:null,p2:null};const occ=[slot.p1,slot.p2].filter(Boolean).join(', ')||'—';const options=['<option value="">-- Choisir un --</option>'].concat(MEMBERS.map(n=>`<option value="${n}">${n}</option>`)).join('');rows+=`<div class="slot"><div class="slot-title">${slotId.replace('slot-','').replace('T',' ')}</div><div class="slot-occupied">Occupé: ${occ}</div><div class="row"><div style="flex:1"><div class="hint">Personne 1</div><select data-slot="${slotId}" data-pos="0">${options}</select>${slot.p1?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p1">Retirer p1</button>`:''}</div><div style="flex:1"><div class="hint">Personne 2</div><select data-slot="${slotId}" data-pos="1">${options}</select>${slot.p2?`<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p2">Retirer p2</button>`:''}</div></div><div class="slot-cap">${2-(slot.p1?1:0)-(slot.p2?1:0)} place(s) restante(s)</div></div>`;}c.innerHTML=`<h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3><div class="grid">${rows}</div>`;c.querySelectorAll('select[data-slot][data-pos]').forEach(sel=>{sel.addEventListener('change',async()=>{const slotId=sel.dataset.slot;const pos=(String(sel.dataset.pos)==='0')?'p1':'p2';const name=sel.value;if(!name)return;sel.disabled=true;try{await apiSetSlot(slotId,pos,name,false);await loadState();renderPlanning();}catch(err){sel.disabled=false;alert("Impossible d'enregistrer le créneau\n"+err.message);}})});c.querySelectorAll('[data-unset-slot]').forEach(btn=>{btn.addEventListener('click',async()=>{if(btn.disabled)return;const slotId=btn.dataset.slot;const pos=btn.dataset.pos;btn.disabled=true;try{await apiSetSlot(slotId,pos,'',true);await loadState();renderPlanning();}catch(err){btn.disabled=false;alert("Impossible de retirer le créneau\n"+err.message);}})});}
-  function renderResume(){const c=document.getElementById('content');const tsh=MEMBERS.map(n=>`<li>${n}: ${state.tshirtData[n]||'—'}</li>`).join('');const pl=Object.entries(state.scheduleData).map(([id,s])=>`<li>${id.replace('slot-','')}: ${[s.p1,s.p2].filter(Boolean).join(', ')||'—'}</li>`).join('');c.innerHTML=`<h3 class="section-title">Résumé</h3><div class="grid"><div><h4>T-Shirts</h4><ul>${tsh}</ul></div><div><h4>Planning</h4><ul>${pl}</ul></div></div>`;}
-  document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>setActiveTab(tab.dataset.tab));});
-  (async()=>{await loadState();setActiveTab('tshirts');})();
-  window.setActiveTab=setActiveTab;window.renderTshirts=renderTshirts;window.renderPlanning=renderPlanning;window.renderResume=renderResume;window.state=state;
+    const MEMBERS = ["Yvan D","Céline D","Nolann D","Enora D"];
+    const SIZES = ["XS","S","M","L","XL","XXL"];
+    const SLOTS = (()=>{
+      const slots=[];
+      const start=new Date("2025-10-11T15:00:00");
+      const end=new Date("2025-10-12T15:00:00");
+      for(let t=new Date(start); t<=end; t.setMinutes(t.getMinutes()+30)){
+        slots.push("slot-"+t.toISOString().slice(0,16).replace("T","-"));
+      }
+      return slots;
+    })();
+
+    let state={tshirtData:{},scheduleData:{}};
+
+    async function loadState(){
+      const r=await fetch("/api/state-get");
+      state=await r.json();
+    }
+
+    async function apiSetTshirt(name,size){
+      return fetch("/api/state-set-tshirt",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({name,size})
+      });
+    }
+
+    async function apiSetSlot(slotId,pos,name){
+      return fetch("/api/state-set-slot",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({slotId,pos,name})
+      });
+    }
+
+    function renderTshirts(){
+      const container=document.getElementById("tshirt-list");
+      container.innerHTML="";
+      MEMBERS.forEach(name=>{
+        const div=document.createElement("div");
+        const sel=document.createElement("select");
+        sel.innerHTML='<option value="">-- Choisir --</option>'+SIZES.map(s=>`<option value="${s}">${s}</option>`).join("");
+        sel.value=state.tshirtData[name]||"";
+        if(sel.value) sel.disabled=true;
+
+        sel.addEventListener("change",async e=>{
+          const val=e.target.value;
+          await apiSetTshirt(name,val);
+          await loadState();
+          renderTshirts();
+          renderResume();
+          // auto-bascule vers Planning à la première sélection de ce membre
+          if(val && !state.scheduleData.some(slot=>Object.values(slot).includes(name))){
+            document.querySelector('nav button[data-tab="planning"]').click();
+          }
+        });
+
+        const btn=document.createElement("button");
+        btn.textContent="Retirer";
+        btn.className="remove-btn";
+        btn.addEventListener("click",async()=>{
+          await apiSetTshirt(name,"");
+          await loadState();
+          renderTshirts();
+          renderResume();
+        });
+
+        div.textContent=name+" : ";
+        div.appendChild(sel);
+        div.appendChild(btn);
+        container.appendChild(div);
+      });
+    }
+
+    function renderPlanning(){
+      const container=document.getElementById("planning-list");
+      container.innerHTML="";
+      SLOTS.forEach(slotId=>{
+        const tr=document.createElement("div");
+        tr.innerHTML="<strong>"+slotId+"</strong> ";
+        [1,2].forEach(pos=>{
+          const sel=document.createElement("select");
+          sel.innerHTML='<option value="">-- Libre --</option>'+MEMBERS.map(m=>`<option value="${m}">${m}</option>`).join("");
+          sel.value=(state.scheduleData[slotId]||{})["p"+pos]||"";
+          if(sel.value) sel.disabled=true;
+
+          sel.addEventListener("change",async e=>{
+            const val=e.target.value;
+            await apiSetSlot(slotId,"p"+pos,val);
+            await loadState();
+            renderPlanning();
+            renderResume();
+          });
+
+          const btn=document.createElement("button");
+          btn.textContent="Retirer";
+          btn.className="remove-btn";
+          btn.addEventListener("click",async()=>{
+            await apiSetSlot(slotId,"p"+pos,"");
+            await loadState();
+            renderPlanning();
+            renderResume();
+          });
+
+          tr.appendChild(sel);
+          tr.appendChild(btn);
+        });
+        container.appendChild(tr);
+      });
+    }
+
+    function renderResume(){
+      document.getElementById("resume-content").textContent=JSON.stringify(state,null,2);
+    }
+
+    document.querySelectorAll("nav button").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        document.querySelectorAll("section").forEach(sec=>sec.classList.remove("active"));
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    (async()=>{
+      await loadState();
+      renderTshirts();
+      renderPlanning();
+      renderResume();
+    })();
   </script>
 </body>
 </html>
