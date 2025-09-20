@@ -208,26 +208,32 @@ function renderTshirts(){
   // clear
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
-      if (btn.disabled) return; // Éviter les clics multiples
-      
+      if (btn.disabled) return;
       const name = btn.dataset.clear;
-      btn.disabled = true;
-      btn.textContent = 'Suppression...';
-      
+      const sel = content.querySelector(`select[data-name="${name}"]`);
+      const prev = state.tshirtData?.[name] || '';
+      btn.disabled = true; btn.textContent='Suppression...';
+
+      // UI clear so user can rechoisir directement
+      if (sel){ sel.disabled = false; sel.value=''; sel.focus(); }
+      if (state.tshirtData) state.tshirtData[name] = '';
+
       try {
-        console.log('Envoi requête de suppression pour:', name, 'avec size: null');
-        await apiSetTshirt(name, '');
-        console.log('Requête API réussie, rechargement de l\'état...');
+        const r = await fetch('/api/state-set-tshirt', {
+          method:'POST', headers:{'content-type':'application/json'},
+          body: JSON.stringify({ name, remove:true })
+        });
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        await r.json().catch(()=>({}));
         await loadState();
-        console.log('État rechargé, re-render...');
         renderTshirts();
-        console.log('Re-render terminé');
-      } catch (error) {
-        console.error('Erreur détaillée:', error);
-        alert(`Erreur lors de la suppression: ${error.message}`);
-        // Remettre le bouton en état en cas d'erreur
-        btn.disabled = false;
-        btn.textContent = 'Retirer';
+      } catch(e){
+        // rollback UI/state on failure
+        if (sel){ sel.value = prev; }
+        if (state.tshirtData) state.tshirtData[name] = prev;
+        alert("Impossible de retirer la taille (erreur serveur).");
+      } finally {
+        btn.disabled = false; btn.textContent = 'Retirer';
       }
     });
   });
