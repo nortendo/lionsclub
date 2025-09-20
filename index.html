@@ -183,7 +183,28 @@ function renderTshirts(){
 
   
 
-  // -- Final robust KPI bindings: no hash navigation, single handler --
+  
+
+  // ---- Smart scroll with robust fallbacks ----
+  function _scrollToSmart(id){
+    const el = document.getElementById(id);
+    if(!el){ location.hash = '#'+id; return; }
+    const before = el.getBoundingClientRect().top;
+    if(typeof el.scrollIntoView === 'function'){
+      try { el.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){ el.scrollIntoView(); }
+    } else {
+      location.hash = '#'+id; // fallback
+    }
+    // If nothing moved (e.g., container not ready), retry next tick via hash
+    requestAnimationFrame(()=>{
+      const after = el.getBoundingClientRect().top;
+      if(Math.abs(after - before) < 2){
+        location.hash = '#'+id;
+      }
+    });
+  }
+
+// -- Final robust KPI bindings: no hash navigation, single handler --
   (function(){
     const scrollToId = (id)=>{
       const el = document.getElementById(id);
@@ -195,17 +216,17 @@ function renderTshirts(){
       const card = document.getElementById(cardId);
       if(!card) return;
       card.style.cursor='pointer';
-      const go = ()=> scrollToId(targetId);
+      const go = ()=> _scrollToSmart(targetId);
       // Click on the whole card
       card.addEventListener('click', (e)=>{
         // prevent double triggers
         e.preventDefault(); e.stopPropagation();
-        go();
+        _scrollToSmart(targetId);
       }, { once:false });
       // Click on the underlined number
       const num = card.querySelector('.v .linkval');
       if(num){
-        num.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); go(); });
+        num.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); _scrollToSmart(targetId); });
       }
     };
     bind('kpi-shirts','section-shirts');
@@ -232,11 +253,11 @@ function renderTshirts(){
       card.addEventListener('click', (e)=>{
         // avoid double-trigger when clicking the inner link
         if(e.target.closest('.v a')) return;
-        scrollToId(target);
+        _scrollToSmart(target);
       });
       const a = card.querySelector('.v a');
       if(a){
-        a.addEventListener('click', (e)=>{ e.preventDefault(); scrollToId(target); });
+        a.addEventListener('click', (e)=>{ e.preventDefault(); _scrollToSmart(target); });
         a.style.textDecoration = 'underline';
       }
     };
@@ -252,7 +273,7 @@ function renderTshirts(){
       const a = e.target.closest('a[href^="#section-"]');
       if(!a) return;
       const id = a.getAttribute('href').slice(1);
-      if(id){ e.preventDefault(); scrollToId(id); }
+      if(id){ e.preventDefault(); _scrollToSmart(id); }
     });
   })();
 
