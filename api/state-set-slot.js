@@ -1,5 +1,13 @@
 const { getState, setState } = require('./_upstash.js');
 
+function normPos(pos){
+  if (pos === 'p1' || pos === 'p2') return pos;
+  if (pos === 0 || pos === '0' || pos === 1 || pos === '1'){
+    return (String(pos) === '0') ? 'p1' : 'p2';
+  }
+  return null;
+}
+
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,14 +23,15 @@ module.exports = async (req, res) => {
 
   try{
     const body = typeof req.body === 'string' ? JSON.parse(req.body||'{}') : (req.body || {});
-    const { slotId, pos, name } = body;
+    const slotId = body.slotId;
+    const rawPos = body.pos;
     const remove = body.remove === true;
+    const name = body.name;
 
-    if (!slotId || typeof slotId !== 'string'){
-      return res.status(400).json({ ok:false, error:'slotId requis' });
-    }
-    if (pos !== 'p1' && pos !== 'p2'){
-      return res.status(400).json({ ok:false, error:'pos doit être "p1" ou "p2"' });
+    const pos = normPos(rawPos);
+    if (!slotId || !pos){
+      // be lenient: silently no-op to avoid breaking UI if spurious calls happen
+      return res.status(200).json({ ok:false, ignored:true });
     }
 
     const state = getState();
@@ -33,7 +42,7 @@ module.exports = async (req, res) => {
       current[pos] = null;
     } else {
       if (!name || typeof name !== 'string' || !name.trim()){
-        return res.status(400).json({ ok:false, error:'name requis' });
+        return res.status(200).json({ ok:false, ignored:true });
       }
       current[pos] = name;
     }
