@@ -177,8 +177,10 @@ function renderTshirts(){
 
   
   // Admin buttons
-  document.getElementById('btn-purge-out')?.addEventListener('click', adminPurgeOutOfRange);
-  document.getElementById('btn-clear-visible')?.addEventListener('click', adminClearVisible);
+  document.getElementById('btn-save-snap')?.addEventListener('click', saveSnapshot);
+  document.getElementById('btn-restore-snap')?.addEventListener('click', ()=>{ if(confirm('Restaurer l\'état sauvegardé ? Cela écrasera les réservations actuelles.')) restoreSnapshot(); });
+  document.getElementById('btn-purge-out')?.addEventListener('click', ()=>{ if(confirm('Confirmer la purge des créneaux hors plage ?')) adminPurgeOutOfRange(); });
+  document.getElementById('btn-clear-visible')?.addEventListener('click', ()=>{ if(confirm('Remettre à zéro TOUS les créneaux visibles ?')) adminClearVisible(); });
 // auto-save + freeze
   content.querySelectorAll('select[data-name]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
@@ -365,7 +367,8 @@ function computeKpis(){
 function renderResume(){
   const { tshirtChosen, taken, available, noShirtNoSlot } = computeKpis();
 
-  // détails t-shirts
+  showAdminIfAny();
+// détails t-shirts
   const rows = MEMBERS
     .filter(n=> state.tshirtData[n])
     .map(n=> `<tr><td>${n}</td><td>${state.tshirtData[n]}</td></tr>`).join('') || `<tr><td colspan="2" class="muted">—</td></tr>`;
@@ -413,18 +416,35 @@ function renderResume(){
         <div class="row"><span class="pill" style="background:#ecfdf3;color:#065f46">Créneaux dispo</span></div>
         <div class="v">${available}</div>
       </div>
-    <div class="card" style="border:1px dashed #e2e8f0;background:#fafafa;margin-top:12px">
+    <div id="admin-panel" style="display:none"><div class="card" style="border:1px dashed #e2e8f0;background:#fafafa;margin-top:12px">
       <div class="row" style="justify-content:space-between;align-items:center">
         <div class="label">Outils admin (maintenance)</div>
         <div class="row" style="gap:8px">
           <button class="btn small ghost" id="btn-purge-out">Purger hors plage</button>
           <button class="btn small ghost" id="btn-clear-visible">Vider créneaux visibles</button>
+<button class="btn small" id="btn-save-snap">Sauvegarder état</button>
+<button class="btn small" id="btn-restore-snap">Restaurer état</button>
         </div>
       </div>
       <div class="row" style="margin-top:8px">
         <span class="muted">« Purger hors plage » supprime les réservations qui ne sont pas dans la fenêtre sam 15:00 → dim 15:00. « Vider créneaux visibles » remet à zéro la fenêtre visible.</span>
       </div>
-    </div>
+
+    <div class="card" id="debug-card" style="background:#fffdf7;border:1px solid #facc15;margin-top:12px">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="row" style="gap:8px;align-items:center">
+          <span>🛠️ <strong>Détails des réservations (débogage)</strong></span>
+          <span class="label">Plage visible uniquement</span>
+        </div>
+        <button class="btn small" id="btn-refresh-debug">Actualiser</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div id="debug-list" class="slot-card" style="width:100%">
+          <div class="label">Liste des créneaux pris — p1 / p2</div>
+          <div id="debug-container" class="row" style="gap:6px;flex-direction:column"></div>
+        </div>
+      </div>
+    </div></div>
 
     <div class="row" style="gap:16px;margin:8px 0 2px">
     </div>
@@ -453,8 +473,23 @@ function renderResume(){
   document.getElementById('kpi-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
   document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollsIntoView({behavior:'smooth'});
   document.getElementById('kpi-incomplete').onclick = ()=> document.querySelector('[data-tab="tshirts"]').click();
+  document.getElementById('btn-refresh-debug')?.addEventListener('click', renderDebugVisible);
+  renderDebugVisible();
 }
 
+
+
+function isAdminEnabled(){
+  try {
+    const params = new URLSearchParams(location.search);
+    if(params.get('admin') === '1') return true;
+    return localStorage.getItem('admin') === '1';
+  } catch(e){ return false; }
+}
+function showAdminIfAny(){
+  const panel = document.getElementById('admin-panel');
+  if(panel) panel.style.display = isAdminEnabled() ? '' : 'none';
+}
 
 async function adminPurgeOutOfRange(){
   const visibleIds = new Set(buildAllSlots().map(s=>s.id));
@@ -466,6 +501,91 @@ async function adminPurgeOutOfRange(){
   }
   await loadState();
   renderResume();
+}
+
+
+function renderDebugVisible(){
+  const cont = document.getElementById('debug-container');
+  if(!cont) return;
+  cont.innerHTML='';
+  const all = buildAllSlots();
+  let found = 0;
+  for(const s of all){
+    const occ = state.scheduleData[s.id];
+    if(!occ || (!occ.p1 && !occ.p2)) continue;
+    found++;
+    const row = document.createElement('div');
+    row.className='row';
+    row.style.justifyContent='space-between';
+    row.style.border='1px solid #e5e7eb';
+    row.style.borderRadius='10px';
+    row.style.padding='8px 10px';
+    row.innerHTML = `
+      <div class="row" style="gap:10px">
+        <span class="chip">${fmtLocal(s.start)}</span>
+        <span class="chip">p1: ${occ.p1||'—'}</span>
+        <span class="chip">p2: ${occ.p2||'—'}</span>
+      </div>
+      <div class="row" style="gap:6px">
+        ${occ.p1 ? `<button class="btn small ghost" data-remove="1" data-id="${s.id}">Retirer p1</button>`:''}
+        ${occ.p2 ? `<button class="btn small ghost" data-remove="2" data-id="${s.id}">Retirer p2</button>`:''}
+      </div>
+    `;
+    cont.appendChild(row);
+  }
+  if(found===0){
+    const empty = document.createElement('div');
+    empty.className='label';
+    empty.textContent='Aucune réservation dans cette plage.';
+    cont.appendChild(empty);
+  }
+
+  // Wire removal buttons
+  cont.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const pos = Number(btn.getAttribute('data-remove'));
+      const id = btn.getAttribute('data-id');
+      await apiSetSlot(id, pos, null, true);
+      await loadState();
+      renderResume();
+    });
+  });
+}
+
+
+function saveSnapshot(){
+  try {
+    const snap = JSON.stringify(state);
+    localStorage.setItem('lionsclub_snapshot', snap);
+    alert('État sauvegardé localement ✅');
+  } catch(e){ alert('Impossible de sauvegarder : ' + e.message); }
+}
+async function restoreSnapshot(){
+  try {
+    const snap = localStorage.getItem('lionsclub_snapshot');
+    if(!snap){ alert('Aucun snapshot trouvé'); return; }
+    const data = JSON.parse(snap);
+    // Replay minimal operations to restore scheduleData (visible range + outside)
+    // We clear all existing reservations first in both ranges
+    const allVisible = new Set(buildAllSlots().map(s=>s.id));
+    // Clear everything we currently have
+    for (const [slotId, occ] of Object.entries(state.scheduleData||{})){
+      if(occ?.p1) await apiSetSlot(slotId,1,null,true);
+      if(occ?.p2) await apiSetSlot(slotId,2,null,true);
+    }
+    // Restore from snapshot
+    for (const [slotId, occ] of Object.entries(data.scheduleData||{})){
+      if(occ?.p1) await apiSetSlot(slotId,1,occ.p1,false);
+      if(occ?.p2) await apiSetSlot(slotId,2,occ.p2,false);
+    }
+    // Restore tshirts
+    for (const [name,size] of Object.entries(data.tshirtData||{})){
+      if(size) await apiSetTshirt(name,size);
+    }
+    await loadState();
+    renderResume();
+    alert('État restauré ✅');
+  } catch(e){ alert('Restauration impossible : ' + e.message); }
 }
 
 async function adminClearVisible(){
