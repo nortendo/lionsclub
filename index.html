@@ -332,20 +332,31 @@ function renderPlanning(){
 
 /** ========= RENDER: RESUME ========= */
 function computeKpis(){
-  // Correction de la logique de calcul pour les KPI
   const allMembers = state.members.length ? state.members : MEMBERS;
   
-  const tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
-  const taken = Object.values(state.scheduleData).reduce((acc, s)=> acc + (s?.p1?1:0) + (s?.p2?1:0), 0);
+  // 1. Initialiser les compteurs à 0 à chaque appel pour éviter les régressions
+  let tshirtChosen = 0;
+  let taken = 0;
+  let available = 0;
+  let noShirtNoSlot = 0;
+  
+  // 2. Compter le nombre de T-shirts déjà choisis en filtrant les valeurs non vides
+  tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
+  
+  // 3. Compter les créneaux déjà réservés
+  taken = Object.values(state.scheduleData).reduce((acc, s)=> acc + (s?.p1?1:0) + (s?.p2?1:0), 0);
+  
+  // 4. Calcule le nombre total de places disponibles
   const totalSlots = buildAllSlots().length * 2;
-  const available = totalSlots - taken;
+  available = totalSlots - taken;
 
-  const noShirtNoSlot = allMembers.filter(n => {
+  // 5. Calcule les personnes à compléter en parcourant TOUS les membres
+  noShirtNoSlot = allMembers.filter(n => {
     const hasTshirt = !!state.tshirtData[n];
     const hasSlot = Object.values(state.scheduleData).some(s => s?.p1 === n || s?.p2 === n);
     return !hasTshirt && !hasSlot;
   }).length;
-
+  
   return { tshirtChosen, taken, available, noShirtNoSlot };
 }
 
@@ -427,7 +438,7 @@ function renderResume(){
 
   // KPI anchors
   document.getElementById('kpi-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'});
+  document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollsIntoView({behavior:'smooth'});
   document.getElementById('kpi-incomplete').onclick = ()=> document.querySelector('[data-tab="tshirts"]').click();
 }
 
