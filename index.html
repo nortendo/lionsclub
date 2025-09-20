@@ -190,7 +190,12 @@ function renderTshirts(){
   // clear
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
+      if (btn.disabled) return; // Éviter les clics multiples
+      
       const name = btn.dataset.clear;
+      btn.disabled = true;
+      btn.textContent = 'Suppression...';
+      
       try {
         console.log('Envoi requête de suppression pour:', name, 'avec size: null');
         await apiSetTshirt(name, null);
@@ -202,6 +207,9 @@ function renderTshirts(){
       } catch (error) {
         console.error('Erreur détaillée:', error);
         alert(`Erreur lors de la suppression: ${error.message}`);
+        // Remettre le bouton en état en cas d'erreur
+        btn.disabled = false;
+        btn.textContent = 'Retirer';
       }
     });
   });
