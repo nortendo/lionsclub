@@ -179,7 +179,48 @@ function renderTshirts(){
   
   
 
-  // Robust KPI bindings (card + number). Prevent default and scroll.
+  
+
+  // ---- Robust KPI navigation (idempotent) ----
+  (function bindResumeKpis(){
+    const scrollToId = (id)=>{
+      const el = document.getElementById(id);
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({behavior:'smooth'});
+      }
+    };
+    const bindCard = (id, target)=>{
+      const card = document.getElementById(id);
+      if(!card) return;
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', (e)=>{
+        // avoid double-trigger when clicking the inner link
+        if(e.target.closest('.v a')) return;
+        scrollToId(target);
+      });
+      const a = card.querySelector('.v a');
+      if(a){
+        a.addEventListener('click', (e)=>{ e.preventDefault(); scrollToId(target); });
+        a.style.textDecoration = 'underline';
+      }
+    };
+    bindCard('kpi-shirts','section-shirts');
+    bindCard('kpi-taken','section-slots');
+    const inc = document.getElementById('kpi-incomplete');
+    if(inc){
+      inc.style.cursor='pointer';
+      inc.addEventListener('click', ()=> document.querySelector('[data-tab="tshirts"]')?.click());
+    }
+    // Event delegation for any hash links inside the Resume card (fallback)
+    content?.addEventListener('click', (e)=>{
+      const a = e.target.closest('a[href^="#section-"]');
+      if(!a) return;
+      const id = a.getAttribute('href').slice(1);
+      if(id){ e.preventDefault(); scrollToId(id); }
+    });
+  })();
+
+// Robust KPI bindings (card + number). Prevent default and scroll.
   const _scrollTo = (id)=>{ const el = document.getElementById(id); if(el){ el.scrollIntoView({behavior:'smooth'}); } };
   const _bind = (id, target)=>{
     const card = document.getElementById(id);
@@ -496,9 +537,9 @@ function renderResume(){
   `;
 
   // KPI anchors
-  document.getElementById('kpi-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('kpi-incomplete').onclick = ()=> document.querySelector('[data-tab="tshirts"]').click();
+  
+  
+  
   document.getElementById('btn-refresh-debug')?.addEventListener('click', renderDebugVisible);
   renderDebugVisible();
 }
