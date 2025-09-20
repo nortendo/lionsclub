@@ -14,457 +14,298 @@
     }
     *{box-sizing:border-box}
     body{
-      margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);
-      background: radial-gradient(1200px 800px at 80% -200px, #ffa057 0%, #ff7a18 40%, #ff4d4d 60%, #8b5cf6 100%), 
-                  linear-gradient(135deg, var(--bg1), var(--bg2));
-      min-height:100vh;
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      background:linear-gradient(135deg,var(--bg1),var(--bg2)) fixed;
+      color:var(--text)
     }
-    .wrap{max-width:1000px;margin:28px auto;padding:0 16px}
-    .header{
-      color:#fff;border-radius:14px;padding:20px 20px 10px;background:linear-gradient(90deg,#ff7a18,#ff9f43);
-      box-shadow:0 12px 30px rgba(0,0,0,.18);position:sticky;top:0;z-index:20
-    }
-    .title{font-size:30px;font-weight:800;text-shadow:0 1px 0 rgba(0,0,0,.08)}
-    .subtitle{opacity:.95;margin-top:6px}
-    .card{
-      background:var(--card);border-radius:14px;margin-top:14px;box-shadow:0 10px 24px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06)
-    }
-    .tabs{display:flex;border-bottom:1px solid #eee;gap:6px;padding:0 10px}
-    .tab{
-      appearance:none;border:0;background:transparent;padding:14px 18px;margin:0;border-bottom:2px solid transparent;
-      font-weight:600;color:#334155;cursor:pointer;display:flex;gap:10px;align-items:center
-    }
-    .tab.active{border-color:#ef4444;color:#111}
-    .pad{padding:18px 22px}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-    .slot-card{border:1px solid #e2e8f0;border-radius:12px;padding:14px}
-    .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .label{font-size:12px;color:var(--muted)}
-    .btn{
-      appearance:none;border:0;cursor:pointer;border-radius:10px;padding:8px 12px;font-weight:600;background:#eef2ff;color:#3730a3
-    }
-    .btn.primary{background:#ef4444;color:#fff}
-    .btn.ghost{background:#f1f5f9;color:#0f172a}
-    .btn.small{padding:6px 10px;font-size:13px}
-    select, .select{
-      width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:10px;background:#fff
-    }
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 10px}
-    .kpi{
-      border:1px solid #e2e8f0;border-radius:12px;padding:14px;background:#fff;min-height:86px;
-      display:flex;flex-direction:column;gap:8px;justify-content:center
-    }
-    .kpi .v{font-size:28px;font-weight:800}
-    .kpi.link{cursor:pointer;transition:.15s transform}
-    .kpi.link:hover{transform:translateY(-2px);box-shadow:0 10px 18px rgba(0,0,0,.08)}
-    .section-title{display:flex;align-items:center;gap:8px;font-weight:700;margin:18px 0 10px}
-    .pill{background:var(--pill);color:var(--pillText);font-weight:700;border-radius:999px;padding:4px 10px;font-size:12px}
-    .chips{display:flex;gap:8px;flex-wrap:wrap}
-    .chip{background:var(--chip);padding:6px 10px;border-radius:999px;font-weight:600}
-    .table{width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
-    .table th,.table td{padding:10px;border-bottom:1px solid #e2e8f0}
-    .muted{color:var(--muted)}
-    .success{color:var(--green)} .danger{color:var(--red)}
-    .hint{font-size:13px;color:#475569}
-    .divider{height:1px;background:#e2e8f0;margin:14px 0}
-    .link{color:#2563eb;text-decoration:none;border-bottom:1px dotted #93c5fd}
-    .center{display:flex;align-items:center;justify-content:center}
-    @media (max-width:840px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+    .container{max-width:1100px;margin:32px auto;padding:0 16px}
+    .card{background:var(--card);border-radius:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);padding:20px}
+    .header{padding:24px 20px 12px;color:#fff;background:transparent}
+    .header h1{margin:0 0 4px;font-size:28px;line-height:1.1;font-weight:800;text-shadow:0 3px 12px rgba(0,0,0,.25)}
+    .subtitle{display:flex;align-items:center;gap:8px;color:#fff;opacity:.9}
+    .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:999px;padding:6px 10px;font-weight:600}
+    .tabs{display:flex;gap:16px;border-bottom:1px solid #eee;margin-bottom:16px}
+    .tab{padding:10px 14px;border-radius:999px;cursor:pointer;font-weight:600;color:#555}
+    .tab.active{background:var(--pill);color:var(--pillText)}
+    .section-title{margin:10px 0 14px;font-size:18px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border-radius:999px;padding:6px 10px;font-weight:600;font-size:13px}
+    select,button{font-family:inherit}
+    select{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+    select:disabled{opacity:.7;cursor:not-allowed}
+    .btn{padding:8px 12px;border:none;border-radius:12px;background:#111827;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+    .btn.small{padding:6px 10px;border-radius:10px}
+    .btn.ghost{background:#f8fafc;color:#111827;border:1px solid #e5e7eb}
+    .btn.danger{background:var(--red)}
+    .hint{color:#6b7280;font-size:12px}
+    .slot{border:1px solid #e5e7eb;border-radius:14px;padding:12px}
+    .slot-title{font-weight:700;margin-bottom:6px}
+    .slot-occupied{color:#6b7280;margin-bottom:6px}
+    .slot-cap{margin-top:6px;font-weight:700}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="container">
     <div class="header">
-      <div class="title">Lions Club La Louvière - Relais pour la Vie</div>
-      <div class="subtitle">La Louvière • 11–12 Octobre 2025</div>
+      <h1>Lions Club La Louvière - Relais pour la Vie</h1>
+      <div class="subtitle"><span class="badge">La Louvière • 11–12 Octobre 2025</span></div>
     </div>
 
     <div class="card">
       <div class="tabs">
-        <button class="tab active" data-tab="tshirts">🧺&nbsp;Tailles T-Shirts</button>
-        <button class="tab" data-tab="planning">🗓️&nbsp;Planning Marche</button>
-        <button class="tab" data-tab="resume">📊&nbsp;Résumé</button>
+        <div class="tab active" data-tab="tshirts">👕 Tailles T-Shirts</div>
+        <div class="tab" data-tab="planning">🚶 Planning Marche</div>
+        <div class="tab" data-tab="resume">📊 Résumé</div>
       </div>
-
-      <div id="content" class="pad"></div>
+      <div id="content"></div>
     </div>
   </div>
 
-<script>
-/** ========= CONFIG / HELPERS ========= */
-const MEMBERS = [
-  "Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V",
-  "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"
-];
+  <script>
+  // ----- Données membres (⚠️ doivent matcher EXACTEMENT les clés API) -----
+  const MEMBERS = [
+    "Yvan D","Enora D","Pino D","Michelina C","Pasquale D","Malika Z","Olivier D","Nolann D","Aurore V",
+    "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"
+  ];
+  const SIZES = ["XS","S","M","L","XL","XXL"];
 
-// slots 30 min: sam 15:00 -> dim 15:00
-const start = new Date("2025-10-11T13:00:00Z"); // 15:00 local BE (UTC+2 en été) ≈ 13:00Z
-const end   = new Date("2025-10-12T13:00:00Z"); // 15:00 local
-const SLOT_MIN = 30;
+  // ----- Slots (⚠️ doivent matcher EXACTEMENT les IDs API) -----
+  const SLOTS = [
+    "slot-2025-10-11-15:00","slot-2025-10-11-15:30","slot-2025-10-11-16:00","slot-2025-10-11-16:30",
+    "slot-2025-10-11-17:00","slot-2025-10-11-17:30","slot-2025-10-11-18:00","slot-2025-10-11-18:30",
+    "slot-2025-10-11-19:00","slot-2025-10-11-19:30","slot-2025-10-11-20:00","slot-2025-10-11-20:30",
+    "slot-2025-10-11-21:00","slot-2025-10-11-21:30","slot-2025-10-11-22:00","slot-2025-10-11-22:30",
+    "slot-2025-10-12-09:00","slot-2025-10-12-09:30","slot-2025-10-12-10:00","slot-2025-10-12-10:30"
+  ];
 
-function fmtLocal(dt){
-  return dt.toLocaleString('fr-BE',{weekday:'short', hour:'2-digit', minute:'2-digit'}).replace('.', '');
-}
-function slotIdFromDate(dt){
-  const y=dt.getUTCFullYear(), m=String(dt.getUTCMonth()+1).padStart(2,'0'), d=String(dt.getUTCDate()).padStart(2,'0');
-  const hh=String(dt.getUTCHours()).padStart(2,'0'), mm=String(dt.getUTCMinutes()).padStart(2,'0');
-  return `slot-${y}-${m}-${d}-${hh}:${mm}`;
-}
-function addMin(dt, min){ return new Date(dt.getTime()+min*60000); }
+  // ----- État -----
+  const state = { tshirtData:{}, scheduleData:{} };
 
-// API helpers
-async function apiGet(){ const r=await fetch('/api/state-get'); return r.json(); }
-async function apiSetTshirt(name,size){
-  const r = await fetch('/api/state-set-tshirt', {
-    method:'POST', headers:{'content-type':'application/json'},
-    body: JSON.stringify({name, size})
-  });
-  if(!r.ok){
-    const t = await r.text().catch(()=> '');
-    console.error('apiSetTshirt failed', r.status, t);
-    throw new Error('apiSetTshirt '+r.status);
+  // ----- API -----
+  async function apiGet(){
+    const r = await fetch('/api/state-get');
+    if(!r.ok) throw new Error('GET '+r.status);
+    return r.json();
   }
-  return r.json().catch(()=>({ok:true}));
-}
-async function apiSetSlot(slotId,pos,name,remove=false){
-  await fetch('/api/state-set-slot',{method:'POST',headers:{'content-type':'application/json'},
-    body:JSON.stringify(remove?{slotId,pos,remove:true}:{slotId,pos,name})});
-}
+  async function apiSetTshirt(name,size){
+    const r = await fetch('/api/state-set-tshirt',{
+      method:'POST',headers:{'content-type':'application/json'},
+      body: JSON.stringify({ name, size })
+    });
+    if(!r.ok){ const t = await r.text().catch(()=> ''); console.error('apiSetTshirt failed', r.status, t); throw new Error('apiSetTshirt '+r.status); }
+    return r.json().catch(()=>({ok:true}));
+  }
+  async function apiSetSlot(slotId,pos,name,remove=false){
+    // pos accepté: 'p1'/'p2' (le backend tolère aussi 0/1)
+    const payload = remove ? {slotId,pos,remove:true} : {slotId,pos,name};
+    const r = await fetch('/api/state-set-slot',{
+      method:'POST',headers:{'content-type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if(!r.ok){ const t = await r.text().catch(()=> ''); console.error('apiSetSlot failed', r.status, t); throw new Error('apiSetSlot '+r.status); }
+    return r.json().catch(()=>({ok:true}));
+  }
 
-// state in memory
-let state = { tshirtData:{}, scheduleData:{}, members:[] };
+  async function loadState(){
+    const s = await apiGet();
+    state.tshirtData = s.tshirtData || {};
+    state.scheduleData = s.scheduleData || {};
+  }
 
-// tabs
-const content = document.getElementById('content');
-document.querySelectorAll('.tab').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    showTab(btn.dataset.tab);
-  });
-});
+  // ----- UI -----
+  function setActiveTab(tab){
+    document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active', el.dataset.tab===tab));
+    if (tab==='tshirts') renderTshirts();
+    else if (tab==='planning') renderPlanning();
+    else renderResume();
+  }
 
-async function loadState(){
-  const data = await apiGet();
-  state = { tshirtData:data.tshirtData||{}, scheduleData:data.scheduleData||{}, members: data.members?.length? data.members: MEMBERS };
-}
-function showTab(key){
-  if(key==='tshirts') renderTshirts();
-  if(key==='planning') renderPlanning();
-  if(key==='resume') renderResume();
-}
-
-/** ========= RENDER: T-SHIRTS ========= */
-function renderTshirts(){
-  const sizes = ['XS','S','M','L','XL','XXL'];
-  const rows = state.members.map(name=>{
-    const val = state.tshirtData[name] || '';
-    const hasSize = val && val !== ''; // Vérifier si on a vraiment une taille
-    const opts = ['<option value="">-- Choisir une taille --</option>']
-      .concat(sizes.map(s=>`<option value="${s}" ${val===s?'selected':''}>${s}</option>`)).join('');
-    const disabled = hasSize ? 'disabled' : '';
-    const badge = hasSize ? `<span class="pill">${val}</span>` : '';
-    return `
-      <div class="slot-card">
-        <div class="row" style="justify-content:space-between">
-          <div><strong>${name}</strong></div>
-          <div class="row">${badge}${hasSize?`<button class="btn small ghost" data-clear="${name}">Retirer</button>`:''}</div>
+  // ----- T-Shirts -----
+  function renderTshirts(){
+    const content = document.getElementById('content');
+    let rows = '';
+    for (const name of MEMBERS){
+      const size = state.tshirtData[name] || '';
+      const frozen = !!size;
+      const options = ['<option value="">-- Choisir une taille --</option>']
+        .concat(SIZES.map(s=>`<option value="${s}" ${s===size?'selected':''}>${s}</option>`))
+        .join('');
+      rows += `
+        <div class="slot">
+          <div class="row" style="justify-content:space-between">
+            <div class="slot-title">${name}</div>
+            ${size?`<span class="pill">${size}</span> <button class="btn small danger" data-clear="${name}">Retirer</button>`:''}
+          </div>
+          <div class="row">
+            <select data-name="${name}" ${frozen?'disabled':''}>${options}</select>
+          </div>
+          <div class="hint">La taille se sauvegarde automatiquement et se fige.</div>
         </div>
-        <div class="row" style="margin-top:10px">
-          <select class="select" data-name="${name}" ${disabled}>
-            ${opts}
-          </select>
-          ${!hasSize?`<span class="hint">La taille se sauvegarde automatiquement et se fige.</span>`:''}
-        </div>
-      </div>`;
-  }).join('');
-
-  content.innerHTML = `
-    <h3 class="section-title">Sélection des tailles de t-shirts</h3>
-    <div class="grid">${rows}</div>
-  `;
-
-  // auto-save (reload & freeze on success)
-content.querySelectorAll('select[data-name]').forEach(sel=>{
-  sel.addEventListener('change', async ()=>{
-    const name = sel.dataset.name;
-    const size = sel.value;
-    const prev = state.tshirtData?.[name] || '';
-    if(!size) return;
-    try{
-      await apiSetTshirt(name, size);
-      await loadState();
-      sel.disabled = true;
-      renderTshirts();
-    }catch(e){
-      sel.value = prev; sel.disabled = false; alert("Impossible d'enregistrer (API)");
+      `;
     }
-  });
-});
-  // clear
-content.querySelectorAll('[data-clear]').forEach(btn=>{
-  btn.addEventListener('click', async ()=>{
-    if (btn.disabled) return;
-    const name = btn.dataset.clear;
-    const sel = content.querySelector(`select[data-name="${name}"]`);
-    const prev = state.tshirtData?.[name] || '';
-    btn.disabled = true; btn.textContent='Suppression...';
-    try{
-      const r = await fetch('/api/state-set-tshirt', {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ name, remove:true })});
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      await r.json().catch(()=>({}));
-      await loadState();
-      renderTshirts();
-    }catch(e){
-      if (sel){ sel.value = prev; }
-      if (state.tshirtData) state.tshirtData[name] = prev;
-      alert('Impossible de retirer (API)');
-    } finally { btn.disabled = false; btn.textContent='Retirer'; }
-  });
-});
-}
+    content.innerHTML = `
+      <h3 class="section-title">Sélection des tailles de t-shirts</h3>
+      <div class="grid">${rows}</div>
+    `;
 
-/** ========= RENDER: PLANNING ========= */
-function buildAllSlots(){
-  const arr=[];
-  for(let t = new Date(start); t<end; t = addMin(t, SLOT_MIN)){
-    const id = slotIdFromDate(t);
-    const endt = addMin(t,SLOT_MIN);
-    arr.push({
-      id, start: new Date(t), end: endt
+    // 1) Enregistrer taille -> reload + rerender (freeze sur succès)
+    content.querySelectorAll('select[data-name]').forEach(sel=>{
+      sel.addEventListener('change', async ()=>{
+        const name = sel.dataset.name;
+        const size = sel.value;
+        const prev = state.tshirtData?.[name] || '';
+        if(!size) return;
+        try{
+          await apiSetTshirt(name, size);
+          await loadState();
+          sel.disabled = true;
+          renderTshirts();
+        }catch(e){
+          sel.value = prev; sel.disabled = false;
+          alert("Impossible d'enregistrer (API)");
+        }
+      });
+    });
+
+    // 2) Retirer -> remove:true -> reload + rerender
+    content.querySelectorAll('[data-clear]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if (btn.disabled) return;
+        const name = btn.dataset.clear;
+        const sel = content.querySelector(`select[data-name="${name}"]`);
+        const prev = state.tshirtData?.[name] || '';
+        btn.disabled = true; btn.textContent='Suppression...';
+        try{
+          const r = await fetch('/api/state-set-tshirt', {
+            method:'POST', headers:{'content-type':'application/json'},
+            body: JSON.stringify({ name, remove:true })
+          });
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          await r.json().catch(()=>({}));
+          await loadState();
+          renderTshirts();
+        }catch(e){
+          if (sel){ sel.value = prev; }
+          if (state.tshirtData) state.tshirtData[name] = prev;
+          alert('Impossible de retirer (API)');
+        } finally { btn.disabled = false; btn.textContent='Retirer'; }
+      });
     });
   }
-  return arr;
-}
 
-function renderPlanning(){
-  const all = buildAllSlots();
-  const memberOpts = (selVal)=> ['<option value="">-- Choisir une personne --</option>']
-    .concat(state.members.map(n=>`<option value="${n}" ${selVal===n?'selected':''}>${n}</option>`)).join('');
-
-  const rows = all.map(s=>{
-    const slot = state.scheduleData[s.id] || { p1:null, p2:null };
-    const occ = [slot.p1, slot.p2].filter(Boolean).join(', ') || '—';
-    const full = slot.p1 && slot.p2;
-    const free = 2 - [slot.p1,slot.p2].filter(Boolean).length;
-
-    const sel1Disabled = !!slot.p1 ? 'disabled' : '';
-    const sel2Disabled = !!slot.p2 ? 'disabled' : '';
-
-    return `
-      <div class="slot-card">
-        <div class="row" style="justify-content:space-between">
-          <div><strong>${fmtLocal(s.start)} → ${fmtLocal(s.end)}</strong></div>
-          <div class="muted">Occupé:&nbsp;${occ}</div>
-        </div>
-
-        <div class="row" style="margin-top:8px;gap:14px">
-          <div style="flex:1">
-            <div class="label">Personne 1</div>
-            ${slot.p1
-              ? `<div class="row">
-                    <span class="pill">${slot.p1}</span>
-                    <button class="btn small ghost" data-remove data-id="${s.id}" data-pos="1">Retirer</button>
-                  </div>`
-              : `<select class="select" data-id="${s.id}" data-pos="1" ${sel1Disabled}>
-                   ${memberOpts('')}
-                 </select>
-                 <div class="hint">Sauvegarde immédiate & figée</div>`
-            }
-          </div>
-
-          <div style="flex:1">
-            <div class="label">Personne 2</div>
-            ${slot.p2
-              ? `<div class="row">
-                    <span class="pill">${slot.p2}</span>
-                    <button class="btn small ghost" data-remove data-id="${s.id}" data-pos="2">Retirer</button>
-                  </div>`
-              : `<select class="select" data-id="${s.id}" data-pos="2" ${sel2Disabled}>
-                   ${memberOpts('')}
-                 </select>
-                 <div class="hint">Sauvegarde immédiate & figée</div>`
-            }
-          </div>
-
+  // ----- Planning -----
+  function renderPlanning(){
+    const content = document.getElementById('content');
+    let rows = '';
+    for (const slotId of SLOTS){
+      const slot = state.scheduleData[slotId] || { p1:null, p2:null };
+      const occ = [slot.p1, slot.p2].filter(Boolean).join(', ') || '—';
+      const options = ['<option value="">-- Choisir un --</option>']
+        .concat(MEMBERS.map(n=>`<option value="${n}">${n}</option>`)).join('');
+      rows += `
+        <div class="slot">
+          <div class="slot-title">${slotId.replace('slot-','').replace('T',' ')}</div>
+          <div class="slot-occupied">Occupé: ${occ}</div>
           <div class="row">
-            <span class="chip">${free} place(s) restante(s)</span>
-            ${full?`<span class="chip">Complet</span>`:''}
+            <div style="flex:1">
+              <div class="hint">Personne 1</div>
+              <select data-slot="${slotId}" data-pos="0">${options}</select>
+              ${slot.p1 ? `<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p1">Retirer p1</button>`:''}
+            </div>
+            <div style="flex:1">
+              <div class="hint">Personne 2</div>
+              <select data-slot="${slotId}" data-pos="1">${options}</select>
+              ${slot.p2 ? `<button class="btn small danger" data-unset-slot data-slot="${slotId}" data-pos="p2">Retirer p2</button>`:''}
+            </div>
           </div>
+          <div class="slot-cap">${2 - (slot.p1?1:0) - (slot.p2?1:0)} place(s) restante(s)</div>
+        </div>
+      `;
+    }
+    content.innerHTML = `
+      <h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3>
+      <div class="grid">${rows}</div>
+    `;
+
+    // change -> save -> reload -> rerender
+    content.querySelectorAll('select[data-slot][data-pos]').forEach(sel=>{
+      sel.addEventListener('change', async ()=>{
+        const slotId = sel.dataset.slot;
+        const pos = (String(sel.dataset.pos)==='0') ? 'p1' : 'p2';
+        const name = sel.value;
+        if(!name) return;
+        sel.disabled = true;
+        try{
+          await apiSetSlot(slotId, pos, name, false);
+          await loadState();
+          renderPlanning();
+        }catch(err){
+          sel.disabled = false;
+          alert("Impossible d'enregistrer le créneau");
+        }
+      });
+    });
+
+    // retirer -> remove:true -> reload -> rerender
+    content.querySelectorAll('[data-unset-slot]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if (btn.disabled) return;
+        const slotId = btn.dataset.slot; const pos = btn.dataset.pos; // p1/p2
+        btn.disabled = true;
+        try{
+          await apiSetSlot(slotId, pos, '', true);
+          await loadState();
+          renderPlanning();
+        }catch(err){
+          btn.disabled = false; alert("Impossible de retirer le créneau");
+        }
+      });
+    });
+  }
+
+  // ----- Résumé -----
+  function renderResume(){
+    const content = document.getElementById('content');
+    const tshRows = MEMBERS.map(n => `<li>${n}: ${state.tshirtData[n]||'—'}</li>`).join('');
+    const plRows = Object.entries(state.scheduleData).map(([id, s]) => {
+      const occ = [s.p1,s.p2].filter(Boolean).join(', ') || '—';
+      return `<li>${id.replace('slot-','')}: ${occ}</li>`;
+    }).join('');
+    content.innerHTML = `
+      <h3 class="section-title">Résumé</h3>
+      <div class="grid">
+        <div>
+          <h4>T-Shirts</h4>
+          <ul>${tshRows}</ul>
+        </div>
+        <div>
+          <h4>Planning</h4>
+          <ul>${plRows}</ul>
         </div>
       </div>
     `;
-  }).join('');
+  }
 
-  content.innerHTML = `
-    <h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3>
-    <p class="hint">Si un créneau a déjà 1 personne, une seconde peut se rajouter pour ne pas marcher seul·e.</p>
-    <div class="grid">${rows}</div>
-  `;
-
-  // auto-save + freeze on change
-  content.querySelectorAll('select.select[data-id]').forEach(sel=>{
-    sel.addEventListener('change', async ()=>{
-      const slotId = sel.dataset.id;
-      const pos = Number(sel.dataset.pos);
-      const name = sel.value;
-      if(!name) return;
-      sel.disabled = true;
-      await apiSetSlot(slotId, pos, name);
-      await loadState();
-      renderPlanning();
-    });
+  // ----- Tabs -----
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=> setActiveTab(tab.dataset.tab));
   });
-  // remove
-  content.querySelectorAll('[data-remove]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const slotId = btn.dataset.id;
-      const pos = Number(btn.dataset.pos);
-      await apiSetSlot(slotId, pos, null, true);
-      await loadState();
-      renderPlanning();
-    });
-  });
-}
 
-/** ========= RENDER: RESUME ========= */
-function computeKpis(){
-  const tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
-  const taken = Object.values(state.scheduleData).reduce((acc, s)=> acc + (s?.p1?1:0) + (s?.p2?1:0), 0);
-  const totalSlots = buildAllSlots().length * 2; // 2 places par créneau
-  const available = totalSlots - taken;
+  // ----- Init -----
+  (async ()=>{
+    await loadState();
+    setActiveTab('tshirts');
+  })();
 
-  const noShirtNoSlot = state.members.filter(n=>{
-    const hasT = !!state.tshirtData[n];
-    const hasS = Object.values(state.scheduleData).some(s=>s?.p1===n || s?.p2===n);
-    return !hasT && !hasS;
-  }).length;
-
-  return { tshirtChosen, taken, available, noShirtNoSlot };
-}
-
-function renderResume(){
-  const { tshirtChosen, taken, available, noShirtNoSlot } = computeKpis();
-
-  // détails t-shirts
-  const rows = state.members
-    .filter(n=> state.tshirtData[n])
-    .map(n=> `<tr><td>${n}</td><td>${state.tshirtData[n]}</td></tr>`).join('') || `<tr><td colspan="2" class="muted">—</td></tr>`;
-
-  const counts = Object.values(state.tshirtData).filter(Boolean)
-    .reduce((acc,s)=> (acc[s]=(acc[s]||0)+1, acc), {});
-  const chips = Object.entries(counts).map(([k,v])=>`<span class="chip">${v}× ${k}</span>`).join('') || '<span class="muted">—</span>';
-
-  // créneaux pris / dispo
-  const all = buildAllSlots();
-  const takenChips = all.map(s=>{
-    const occ = state.scheduleData[s.id];
-    if(!occ?.p1 && !occ?.p2) return '';
-    const p1 = occ.p1||'—', p2 = occ.p2||'—';
-    return `<a class="chip" href="#slot-${s.start.toISOString()}">${fmtLocal(s.start)}</a>`;
-  }).filter(Boolean).join('') || '<span class="muted">—</span>';
-
-  const freeChips = all.map(s=>{
-    const occ = state.scheduleData[s.id]||{};
-    if(occ.p1 && occ.p2) return '';
-    return `<a class="chip" href="#planning">${fmtLocal(s.start)}</a>`;
-  }).filter(Boolean).join('') || '<span class="muted">—</span>';
-
-  content.innerHTML = `
-    <h3 class="section-title">Résumé de l'organisation</h3>
-
-    <div class="kpis">
-      <div class="kpi link" id="kpi-incomplete" title="Aller aux détails">
-        <div class="row"><span class="pill">À compléter</span></div>
-        <div class="v">${noShirtNoSlot}</div>
-        <div class="muted">sans T-shirt & ni créneau</div>
-      </div>
-
-      <div class="kpi link" id="kpi-shirts">
-        <div class="row"><span class="pill">T-Shirts choisis</span></div>
-        <div class="v">${tshirtChosen}</div>
-      </div>
-
-      <div class="kpi link" id="kpi-taken">
-        <div class="row"><span class="pill">Créneaux réservés</span></div>
-        <div class="v">${taken}</div>
-      </div>
-
-      <div class="kpi">
-        <div class="row"><span class="pill" style="background:#ecfdf3;color:#065f46">Créneaux dispo</span></div>
-        <div class="v">${available}</div>
-      </div>
-    </div>
-
-    <div class="row" style="gap:16px;margin:8px 0 2px">
-    </div>
-
-    <div class="divider"></div>
-
-    <h4 class="section-title" id="section-shirts">🧺 Détails T-Shirts par personne</h4>
-    <table class="table">
-      <thead><tr><th>Nom</th><th>Taille</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-
-    <div class="row" style="margin:12px 0"><span class="label">Répartition par tailles</span></div>
-    <div class="chips">${chips}</div>
-
-    <div class="divider"></div>
-
-    <h4 class="section-title" id="section-slots">🔒 Créneaux déjà pris</h4>
-    <div class="chips">${takenChips}</div>
-
-    <h4 class="section-title" style="margin-top:16px">✅ Créneaux disponibles</h4>
-    <div class="chips">${freeChips}</div>
-  `;
-
-  // KPI anchors
-  document.getElementById('kpi-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('kpi-incomplete').onclick = ()=> document.querySelector('[data-tab="tshirts"]').click();
-}
-
-/** ========= INIT ========= */
-(async function init(){
-  await loadState();
-  showTab('tshirts');
-})();
-</script>
+  // ----- Expose helpers global (utile pour débogage + autres scripts) -----
+  window.setActiveTab = setActiveTab;
+  window.renderTshirts = renderTshirts;
+  window.renderPlanning = renderPlanning;
+  window.renderResume = renderResume;
+  window.state = state;
+  </script>
 </body>
 </html>
-// Bind delegated listeners for planning once
-(function(){
-  if (document.body._bindPlanningDelegated) return;
-  document.body._bindPlanningDelegated = true;
-  document.body.addEventListener('change', async (e)=>{
-    const sel = e.target.closest('select[data-slot][data-pos]');
-    if(!sel) return;
-    const slotId = sel.dataset.slot;
-    const posIndex = sel.dataset.pos; // '0' or '1'
-    const pos = (String(posIndex)==='0')?'p1':'p2';
-    const name = sel.value;
-    const prev = sel.getAttribute('data-prev') || '';
-    if(!name) return;
-    sel.disabled = true;
-    try{
-      await apiSetSlot(slotId, pos, name, false);
-      await loadState();
-      renderPlanning();
-    }catch(err){
-      sel.disabled = false; sel.value = prev; alert('Impossible d\'enregistrer le créneau');
-    }
-  });
-  document.body.addEventListener('click', async (e)=>{
-    const btn = e.target.closest('[data-unset-slot]');
-    if(!btn) return;
-    const slotId = btn.dataset.slot; const pos = btn.dataset.pos; // p1/p2
-    const sel = document.querySelector(`select[data-slot="${slotId}"][data-pos="${pos==='p1'?'0':'1'}"]`);
-    btn.disabled = true;
-    try{
-      await apiSetSlot(slotId, pos, '', true);
-      await loadState();
-      renderPlanning();
-    }catch(err){ btn.disabled = false; alert('Impossible de retirer le créneau'); }
-  });
-})();
