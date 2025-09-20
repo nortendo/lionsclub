@@ -97,10 +97,6 @@ const MEMBERS = [
   "Christophe G","Cyril G","Irina","Sabrina","Sandy","Le fils de Sandy","Yves E","Le fils de Manuela","Manuela"
 ];
 
-// Helper: only count real names from MEMBERS
-function isValidMember(v){ return !!v && MEMBERS.includes(v); }
-
-
 // slots 30 min: sam 15:00 -> dim 15:00
 const start = new Date("2025-10-11T13:00:00Z"); // 15:00 local BE (UTC+2 en été) ≈ 13:00Z
 const end   = new Date("2025-10-12T13:00:00Z"); // 15:00 local
@@ -141,20 +137,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
 
 async function loadState(){
   const data = await apiGet();
-  state = { tshirtData:data.tshirtData||{// Normalisation anti-fantômes: garder seulement SLOTS + vrais membres
-try{
-  const official = new Set(SLOTS);
-  const cleaned = {};
-  for(const id of Object.keys(state.scheduleData || {})){
-    if(!official.has(id)) continue;
-    const s = state.scheduleData[id] || {};
-    const p1 = isValidMember(s.p1) ? s.p1 : null;
-    const p2 = isValidMember(s.p2) ? s.p2 : null;
-    if(p1 || p2){ cleaned[id] = {p1, p2}; }
-  }
-  state.scheduleData = cleaned;
-}catch(e){/* no-op */}
-}, scheduleData:data.scheduleData||{}, members: data.members?.length? data.members: MEMBERS };
+  state = { tshirtData:data.tshirtData||{}, scheduleData:data.scheduleData||{}, members: data.members?.length? data.members: MEMBERS };
 }
 function showTab(key){
   if(key==='tshirts') renderTshirts();
