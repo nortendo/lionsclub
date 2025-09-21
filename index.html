@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Lions Club La Louvière - Relais pour la Vie</title>
+  <title>Lions Club - Relais pour la Vie</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -75,8 +75,8 @@
 <body>
   <div class="wrap">
     <div class="header">
-      <div class="title">Lions Club La Louvière - Relais pour la Vie</div>
-      <div class="subtitle">La Louvière • 11–12 Octobre 2025</div>
+      <div class="title">Lions Club - Relais pour la Vie</div>
+      <div class="subtitle">11–12 Octobre 2025</div>
     </div>
 
     <div class="card">
@@ -113,7 +113,10 @@ function slotIdFromDate(dt){
 function addMin(dt, min){ return new Date(dt.getTime()+min*60000); }
 
 // API helpers
-async function apiGet(){ const r=await fetch('/api/state-get'); return r.json(); }
+async function apiGet(){ 
+  const r=await fetch('/api/state-get'); 
+  return r.json(); 
+}
 async function apiSetTshirt(name,size){
   await fetch('/api/state-set-tshirt',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name, size})});
 }
@@ -124,6 +127,17 @@ async function apiSetSlot(slotId,pos,name,remove=false){
 
 // state in memory
 let state = { tshirtData:{}, scheduleData:{}, members:[] };
+
+// Union MEMBERS + state.members (ordre: MEMBERS puis ajouts backend), sans doublons
+function allMembers(){
+  const a = Array.isArray(MEMBERS)? MEMBERS : [];
+  const b = Array.isArray(state.members)? state.members : [];
+  const seen = new Set();
+  const out = [];
+  for(const n of [...a, ...b]){ if(n && !seen.has(n)){ seen.add(n); out.push(n); } }
+  return out;
+}
+
 
 // tabs
 const content = document.getElementById('content');
@@ -148,23 +162,24 @@ function showTab(key){
 /** ========= RENDER: T-SHIRTS ========= */
 function renderTshirts(){
   const sizes = ['XS','S','M','L','XL','XXL'];
-  const rows = state.members.map(name=>{
+  const rows = allMembers().map(name=>{
     const val = state.tshirtData[name] || '';
+    const hasSize = val && val !== '';
     const opts = ['<option value="">-- Choisir une taille --</option>']
       .concat(sizes.map(s=>`<option value="${s}" ${val===s?'selected':''}>${s}</option>`)).join('');
-    const disabled = val ? 'disabled' : '';
-    const badge = val ? `<span class="pill">${val}</span>` : '';
+    const disabled = hasSize ? 'disabled' : '';
+    const badge = hasSize ? `<span class="pill">${val}</span>` : '';
     return `
       <div class="slot-card">
         <div class="row" style="justify-content:space-between">
           <div><strong>${name}</strong></div>
-          <div class="row">${badge}${val?`<button class="btn small ghost" data-clear="${name}">Retirer</button>`:''}</div>
+          <div class="row">${badge}${hasSize?`<button class="btn small ghost" data-clear="${name}">Retirer</button>`:''}</div>
         </div>
         <div class="row" style="margin-top:10px">
           <select class="select" data-name="${name}" ${disabled}>
             ${opts}
           </select>
-          ${!val?`<span class="hint">La taille se sauvegarde automatiquement et se fige.</span>`:''}
+          ${!hasSize?`<span class="hint">La taille se sauvegarde automatiquement et se fige.</span>`:''}
         </div>
       </div>`;
   }).join('');
@@ -174,7 +189,19 @@ function renderTshirts(){
     <div class="grid">${rows}</div>
   `;
 
-  // auto-save + freeze
+  
+
+  // Admin panel visibility & bindings
+  const adminPanel = document.getElementById('admin-panel');
+  if(adminPanel){ adminPanel.style.display = isAdminEnabled() ? '' : 'none'; }
+  document.getElementById('btn-purge-out')?.addEventListener('click', ()=>{
+    if(confirm('Confirmer la purge des créneaux hors plage ?')) adminPurgeOutOfRange();
+  });
+  document.getElementById('btn-clear-visible')?.addEventListener('click', ()=>{
+    if(confirm('Remettre à zéro tous les créneaux visibles ?')) adminClearVisible();
+  });
+
+// auto-save + freeze
   content.querySelectorAll('select[data-name]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
       const name = sel.dataset.name;
@@ -184,15 +211,38 @@ function renderTshirts(){
       await apiSetTshirt(name, size);
       await loadState();
       renderTshirts();
+      
+      // Redirection automatique vers l'onglet Planning après sélection d'une taille
+      setTimeout(() => {
+        // Switcher vers l'onglet Planning
+        document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+        document.querySelector('[data-tab="planning"]').classList.add('active');
+        showTab('planning');
+        
+        // Scroll vers le haut du planning
+        document.getElementById('content').scrollIntoView({behavior:'smooth', block:'start'});
+      }, 200);
     });
   });
+
   // clear
   content.querySelectorAll('[data-clear]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
+      if (btn.disabled) return;
+      
       const name = btn.dataset.clear;
-      await apiSetTshirt(name, '');
-      await loadState();
-      renderTshirts();
+      btn.disabled = true;
+      btn.textContent = 'Suppression...';
+      
+      try {
+        await apiSetTshirt(name, null);
+        await loadState();
+        renderTshirts();
+      } catch (error) {
+        alert(`Erreur lors de la suppression: ${error.message}`);
+        btn.disabled = false;
+        btn.textContent = 'Retirer';
+      }
     });
   });
 }
@@ -213,7 +263,7 @@ function buildAllSlots(){
 function renderPlanning(){
   const all = buildAllSlots();
   const memberOpts = (selVal)=> ['<option value="">-- Choisir une personne --</option>']
-    .concat(state.members.map(n=>`<option value="${n}" ${selVal===n?'selected':''}>${n}</option>`)).join('');
+    .concat(MEMBERS.map(n=>`<option value="${n}" ${selVal===n?'selected':''}>${n}</option>`)).join('');
 
   const rows = all.map(s=>{
     const slot = state.scheduleData[s.id] || { p1:null, p2:null };
@@ -270,7 +320,7 @@ function renderPlanning(){
   }).join('');
 
   content.innerHTML = `
-    <h3 class="section-title">Réserver un créneau (jusqu’à 2 personnes / créneau)</h3>
+    <h3 class="section-title">Réserver un créneau (jusqu'à 2 personnes / créneau)</h3>
     <p class="hint">Si un créneau a déjà 1 personne, une seconde peut se rajouter pour ne pas marcher seul·e.</p>
     <div class="grid">${rows}</div>
   `;
@@ -279,7 +329,7 @@ function renderPlanning(){
   content.querySelectorAll('select.select[data-id]').forEach(sel=>{
     sel.addEventListener('change', async ()=>{
       const slotId = sel.dataset.id;
-      const pos = Number(sel.dataset.pos);
+      const pos = sel.dataset.pos === '1' ? 'p1' : 'p2';
       const name = sel.value;
       if(!name) return;
       sel.disabled = true;
@@ -292,8 +342,9 @@ function renderPlanning(){
   content.querySelectorAll('[data-remove]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const slotId = btn.dataset.id;
-      const pos = Number(btn.dataset.pos);
-      await apiSetSlot(slotId, pos, null, true);
+      const pos = btn.dataset.pos;
+      const properPos = pos === '1' ? 'p1' : 'p2';
+      await apiSetSlot(slotId, properPos, null, true);
       await loadState();
       renderPlanning();
     });
@@ -304,10 +355,10 @@ function renderPlanning(){
 function computeKpis(){
   const tshirtChosen = Object.values(state.tshirtData).filter(Boolean).length;
   const taken = Object.values(state.scheduleData).reduce((acc, s)=> acc + (s?.p1?1:0) + (s?.p2?1:0), 0);
-  const totalSlots = buildAllSlots().length * 2; // 2 places par créneau
+  const totalSlots = buildAllSlots().length * 2;
   const available = totalSlots - taken;
 
-  const noShirtNoSlot = state.members.filter(n=>{
+  const noShirtNoSlot = allMembers().filter(n=>{
     const hasT = !!state.tshirtData[n];
     const hasS = Object.values(state.scheduleData).some(s=>s?.p1===n || s?.p2===n);
     return !hasT && !hasS;
@@ -320,7 +371,7 @@ function renderResume(){
   const { tshirtChosen, taken, available, noShirtNoSlot } = computeKpis();
 
   // détails t-shirts
-  const rows = state.members
+  const rows = MEMBERS
     .filter(n=> state.tshirtData[n])
     .map(n=> `<tr><td>${n}</td><td>${state.tshirtData[n]}</td></tr>`).join('') || `<tr><td colspan="2" class="muted">—</td></tr>`;
 
@@ -333,9 +384,7 @@ function renderResume(){
   const takenChips = all.map(s=>{
     const occ = state.scheduleData[s.id];
     if(!occ?.p1 && !occ?.p2) return '';
-    const p1 = occ.p1||'—', p2 = occ.p2||'—';
-    const names = [occ.p1, occ.p2].filter(Boolean).join(' & ') || '—';
-    return `<a class="chip" href="#slot-${s.start.toISOString()}">${fmtLocal(s.start)}</a><span class="hint"> — ${names}</span>`;
+    return `<a class="chip" href="#slot-${s.start.toISOString()}">${fmtLocal(s.start)}</a>`;
   }).filter(Boolean).join('') || '<span class="muted">—</span>';
 
   const freeChips = all.map(s=>{
@@ -345,11 +394,26 @@ function renderResume(){
   }).filter(Boolean).join('') || '<span class="muted">—</span>';
 
   content.innerHTML = `
-    <h3 class="section-title">Résumé de l’organisation</h3>
+    <h3 class="section-title">Résumé de l'organisation</h3>
 
     <div class="kpis">
       <div class="kpi link" id="kpi-incomplete" title="Aller aux détails">
         <div class="row"><span class="pill">À compléter</span></div>
+    <div id="admin-panel" style="display:none">
+      <div class="card" style="border:1px dashed #e2e8f0;background:#fafafa;margin-top:12px">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="label">Outils admin (maintenance)</div>
+          <div class="row" style="gap:8px">
+            <button class="btn small ghost" id="btn-purge-out">Purger hors plage</button>
+            <button class="btn small ghost" id="btn-clear-visible">Vider créneaux visibles</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <span class="muted">« Purger hors plage » supprime les réservations qui ne sont pas dans la fenêtre visible. « Vider créneaux visibles » remet à zéro la fenêtre visible.</span>
+        </div>
+      </div>
+    </div>
+
         <div class="v">${noShirtNoSlot}</div>
         <div class="muted">sans T-shirt & ni créneau</div>
       </div>
@@ -368,9 +432,6 @@ function renderResume(){
         <div class="row"><span class="pill" style="background:#ecfdf3;color:#065f46">Créneaux dispo</span></div>
         <div class="v">${available}</div>
       </div>
-    </div>
-
-    <div class="row" style="gap:16px;margin:8px 0 2px">
     </div>
 
     <div class="divider"></div>
@@ -393,14 +454,59 @@ function renderResume(){
     <div class="chips">${freeChips}</div>
   `;
 
-  // KPI anchors
-  document.getElementById('kpi-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('kpi-taken').onclick  = ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('kpi-incomplete').onclick = ()=> document.querySelector('[data-tab="tshirts"]').click();
+  // KPI anchors - liaison avec les sections de détails
+  const kpiShirts = document.getElementById('kpi-shirts');
+  const kpiTaken = document.getElementById('kpi-taken');
+  const kpiIncomplete = document.getElementById('kpi-incomplete');
+  
+  if (kpiShirts) {
+    kpiShirts.onclick = () => {
+      const target = document.getElementById('section-shirts');
+      if (target) target.scrollIntoView({behavior:'smooth'});
+    };
+  }
+  
+  if (kpiTaken) {
+    kpiTaken.onclick = () => {
+      const target = document.getElementById('section-slots');
+      if (target) target.scrollIntoView({behavior:'smooth'});
+    };
+  }
+  
+  if (kpiIncomplete) {
+    kpiIncomplete.onclick = () => {
+      document.querySelector('[data-tab="tshirts"]')?.click();
+    };
+  }
+}
 
-  // inline “Voir détails …”
-  document.getElementById('anchor-shirts').onclick = ()=> document.getElementById('section-shirts')?.scrollIntoView({behavior:'smooth'});
-  document.getElementById('anchor-slots').onclick  = ()=> document.getElementById('section-slots')?.scrollIntoView({behavior:'smooth'});
+
+function isAdminEnabled(){
+  try{
+    const p = new URLSearchParams(location.search);
+    if(p.get('admin')==='1') return true;
+    return localStorage.getItem('admin')==='1';
+  }catch(e){ return false; }
+}
+async function adminPurgeOutOfRange(){
+  const visibleIds = new Set(buildAllSlots().map(s=>s.id));
+  const entries = Object.entries(state.scheduleData||{});
+  for(const [slotId, occ] of entries){
+    if(visibleIds.has(slotId)) continue;
+    if(occ?.p1) await apiSetSlot(slotId,1,null,true);
+    if(occ?.p2) await apiSetSlot(slotId,2,null,true);
+  }
+  await loadState(); renderResume();
+}
+async function adminClearVisible(){
+  const ids = buildAllSlots().map(s=>s.id);
+  for(const slotId of ids){
+    const occ = state.scheduleData[slotId];
+    if(!occ) continue;
+    if(occ?.p1) await apiSetSlot(slotId,1,null,true);
+    if(occ?.p2) await apiSetSlot(slotId,2,null,true);
+  }
+  await loadState(); renderResume();
 }
 
 /** ========= INIT ========= */
