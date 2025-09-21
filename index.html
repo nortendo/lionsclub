@@ -383,8 +383,9 @@ function renderResume(){
   const takenChips = all.map(s=>{
     const occ = state.scheduleData[s.id];
     if(!occ?.p1 && !occ?.p2) return '';
-    return `<a class="chip" href="#slot-${s.start.toISOString()}">${fmtLocal(s.start)}</a>`;
-  }).filter(Boolean).join('') || '<span class="muted">—</span>';
+    const names = [occ.p1, occ.p2].filter(Boolean).join(' & ');
+    return `<div class="chip">${fmtLocal(s.start)} → ${names}</div>`;
+}).filter(Boolean).join('') || '<span class="muted">—</span>';
 
   const freeChips = all.map(s=>{
     const occ = state.scheduleData[s.id]||{};
